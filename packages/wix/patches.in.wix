@@ -1,0 +1,12 @@
+<CPackWiXPatch>
+    <CPackWiXFragment Id="@PROJECT_WIX_BIN_DIR_COMP@">
+        <RegistryKey Root="HKLM" Key="Software\@PROJECT_REGISTRY_KEY@">
+            <RegistryValue Type="string" Name="Version" Value="@PROJECT_VERSION@@PROJECT_VERSION_STABILITY@" />
+            <RegistryValue Type="string" Value="[@PROJECT_WIX_BIN_DIR@]" />
+        </RegistryKey>
+        <Environment Id="RunnerEnv" Name="JSON_RUNNER" Action="set" System="yes" Permanent="no" Value="[@PROJECT_WIX_BIN_DIR@]" />
+        <Environment Id="RunnerPath" Name="PATH" Action="set" System="yes" Permanent="no" Part="last" Value="[@PROJECT_WIX_BIN_DIR@]" />
+    </CPackWiXFragment>
+    <CPackWiXFragment Id="#PRODUCTFEATURE" AllowAdvertise="no" />
+    <CPackWiXFragment Id="CM_C_main_exec" AllowAdvertise="no" />
+</CPackWiXPatch>

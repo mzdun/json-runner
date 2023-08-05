@@ -1,0 +1,59 @@
+name: Super-linter
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    name: Super-linter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter/slim@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOG_LEVEL: ERROR
+          SUPPRESS_POSSUM: true
+
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_JSON: true
+          VALIDATE_MARKDOWN: true
+
+          VALIDATE_CPP: true
+
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_PYTHON_MYPY: true
+          VALIDATE_PYTHON_PYLINT: true
+          VALIDATE_PYTHON_ISORT: true
+
+          VALIDATE_CSS: true
+          VALIDATE_HTML: true
+
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_JAVASCRIPT_STANDARD: true
+          VALIDATE_JSX: true
+
+          VALIDATE_TYPESCRIPT_ES: true
+          VALIDATE_TYPESCRIPT_STANDARD: true
+          VALIDATE_TSX: true
+
+          IGNORE_GENERATED_FILES: true
+          FILTER_REGEX_INCLUDE: ".*/libs/.*|.*/apps/.*|.*/tools/[^/]+\\.py"
+          FILTER_REGEX_EXCLUDE: ".*/build/.*|\
+                                 .*/external/.*|\
+                                 .*/tools/.*"
+
+      - name: Lint with clang-format
+        uses: DoozyX/clang-format-lint-action@v0.16.2
+        with:
+            exclude: ./build ./external ./tools
+            clangFormatVersion: 16

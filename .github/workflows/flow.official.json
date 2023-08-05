@@ -1,0 +1,7 @@
+{
+  "exclude": [
+    {"compiler": "clang"},
+    {"build_type": "Debug"},
+    {"sanitizer": true}
+  ]
+}

@@ -1,0 +1,190 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  RELEASE: ${{ github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+
+jobs:
+  M:
+    name: Select builds
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE: ${{env.RELEASE}}
+      matrix: ${{steps.flow.outputs.matrix}}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Find builds
+      id: flow
+      run: python ./flow.py run --github --matrix >> $GITHUB_OUTPUT
+
+  build:
+    needs: M
+    strategy:
+      matrix: ${{ fromJson(needs.M.outputs.matrix) }}
+
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
+      CONAN_REVISIONS_ENABLED: 1
+      FLOW_COMMAND: python ./flow.py run --github --cutdown-os -c os=${{ matrix.os }} build_type=${{ matrix.build_type }} compiler=${{ matrix.compiler }} sanitizer=${{ matrix.sanitizer }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    runs-on: ${{ matrix.github_os }}
+    name: ${{ matrix.build_type }} with ${{ matrix.compiler }} on ${{ matrix.os }}${{ matrix.sanitizer && ' (and sanitizer)' || '' }}
+    outputs:
+      RELEASE: ${{ fromJson(needs.M.outputs.RELEASE) }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+         submodules: true
+
+    - name: Conanfile hash
+      run: |
+        echo ${{ hashFiles('conanfile.txt') }}
+        echo ${{ matrix.latest_conan_hash }}
+
+#     ######## ##    ## ##     ## #### ########   #######  ##    ## ##     ## ######## ##    ## ########
+#     ##       ###   ## ##     ##  ##  ##     ## ##     ## ###   ## ###   ### ##       ###   ##    ##
+#     ##       ####  ## ##     ##  ##  ##     ## ##     ## ####  ## #### #### ##       ####  ##    ##
+#     ######   ## ## ## ##     ##  ##  ########  ##     ## ## ## ## ## ### ## ######   ## ## ##    ##
+#     ##       ##  ####  ##   ##   ##  ##   ##   ##     ## ##  #### ##     ## ##       ##  ####    ##
+#     ##       ##   ###   ## ##    ##  ##    ##  ##     ## ##   ### ##     ## ##       ##   ###    ##
+#     ######## ##    ##    ###    #### ##     ##  #######  ##    ## ##     ## ######## ##    ##    ##
+
+    - name: Install GCC 12 & Ninja
+      if: ${{ matrix.ubuntu }}
+      run: |
+        sudo apt-get remove g++-11 -y
+        sudo apt-get install ninja-build -y
+
+    - name: Set up GCC
+      if: ${{ matrix.ubuntu && matrix.gcc }}
+      run: |
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 90
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-12 90
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-12 90
+        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-12 90
+
+    - name: Set up Clang
+      if: ${{ matrix.clang }}
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: 15
+
+    - name: Check C++ binary
+      if: ${{ matrix.ubuntu }}
+      run: |
+        realpath `which c++`
+        c++ --version
+        sudo rm -rf `which g++-11`
+        sudo rm -rf `which gcc-11`
+        sudo rm -rf `which clang++-14`
+        sudo rm -rf `which clang-14`
+        sudo locale-gen pl_PL.UTF-8 en_US.UTF-8 en_GB.UTF-8
+
+    - name: Install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 1.57.0
+
+    - name: Configure Conan (deprecated)
+      run: |
+        conan remote add mbits-conan https://mbits.jfrog.io/artifactory/api/conan/mbits-conan
+        conan user -p ${{ secrets.JFROG_KEY }} -r mbits-conan ${{ secrets.JFROG_USER }}
+
+    - name: Conan cache
+      uses: actions/cache@v3
+      id: cache
+      with:
+        path: ${{ matrix.home }}/.conan/data
+        key: ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
+        restore-keys: |
+          ${{ matrix.github_os }}-${{ matrix.build_type }}
+          ${{ matrix.github_os }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
+          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
+
+    - name: Install OpenCppCoverage
+      uses: KungFuDonkey/Install-OpenCppCoverage@v1
+      if: ${{ matrix.windows && matrix.build_type == 'Debug' }}
+
+    - name: Get latest archive from GitHub
+      run: python ./tools/download-latest.py
+
+#     ########  ########   #######        ## ########  ######  ########
+#     ##     ## ##     ## ##     ##       ## ##       ##    ##    ##
+#     ##     ## ##     ## ##     ##       ## ##       ##          ##
+#     ########  ########  ##     ##       ## ######   ##          ##
+#     ##        ##   ##   ##     ## ##    ## ##       ##          ##
+#     ##        ##    ##  ##     ## ##    ## ##       ##    ##    ##
+#     ##        ##     ##  #######   ######  ########  ######     ##
+
+    - name: Configure
+      run: ${{ env.FLOW_COMMAND }} -s Conan,CMake
+
+    - name: Build
+      run: ${{ env.FLOW_COMMAND }} -s Build
+
+    - name: Test
+      run: ${{ env.FLOW_COMMAND }} -s Test,StoreTests
+
+    - name: Pack
+      id: artifacts
+      if: ${{ fromJson(needs.M.outputs.RELEASE) }}
+      run: ${{ env.FLOW_COMMAND }} -s Sign,Pack,SignPackages,StorePackages
+      env:
+        SIGN_TOKEN: ${{ secrets.SIGN_TOKEN }}
+
+#     ##     ## ########  ##        #######     ###    ########
+#     ##     ## ##     ## ##       ##     ##   ## ##   ##     ##
+#     ##     ## ##     ## ##       ##     ##  ##   ##  ##     ##
+#     ##     ## ########  ##       ##     ## ##     ## ##     ##
+#     ##     ## ##        ##       ##     ## ######### ##     ##
+#     ##     ## ##        ##       ##     ## ##     ## ##     ##
+#      #######  ##        ########  #######  ##     ## ########
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v3
+      if: ${{ steps.artifacts.outputs.CPACK_GENERATORS != '' }}
+      with:
+        name: Packages
+        path: ${{github.workspace}}/build/artifacts/packages/
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: Test results
+        path: ${{github.workspace}}/build/artifacts/test-results/
+
+  publish:
+    name: Upload packages
+    if: ${{ fromJson(needs.build.outputs.RELEASE) }}
+    needs: build
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Get packages
+      uses: actions/download-artifact@v3
+      with:
+        name: Packages
+        path: ${{github.workspace}}/build/download/packages
+    
+    - name: Upload to release
+      run: python tools/release.py --upload ${{github.workspace}}/build/download/packages

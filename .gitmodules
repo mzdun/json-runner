@@ -1,0 +1,6 @@
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/mbits-libs/json.git
+[submodule "external/libarch"]
+	path = external/libarch
+	url = https://github.com/mbits-libs/libarch.git

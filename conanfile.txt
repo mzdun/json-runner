@@ -1,0 +1,15 @@
+[requires]
+mbits-args/0.12.3
+fmt/9.1.0
+gtest/cci.20210126
+ctre/3.7.2
+
+## libarch:
+libzip/1.7.3
+bzip2/1.0.8
+lzma_sdk/9.20
+
+[generators]
+CMakeDeps
+CMakeToolchain
+VirtualRunEnv

@@ -1,0 +1,47 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "required": ["args", "expected"],
+    "properties": {
+        "$schema": {"type": "string"},
+        "lang": {"type": "boolean"},
+        "linear": {"type": "boolean"},
+        "disabled": {"enum": [true, false, "win32", "linux"]},
+        "env": {
+            "type": "objects",
+            "properties": {
+                "^$": {"not": {}},
+                "^.+$": {"type": ["string", "null", "array"], "items": {"type": "string"}}
+            }
+        },
+        "patches": {
+            "type": "object",
+            "properties": {
+                "^$": {"not": {}},
+                "^.+$": {"type": "string"}
+            }
+        },
+        "args": {"type": "string"},
+        "post": {"type": ["string", "array"], "items": {"type": "string"}},
+        "check": {
+            "type": "object",
+            "properties": {
+                "stdin": {"enum": ["all", "begin", "end"]},
+                "stderr": {"enum": ["all", "begin", "end"]}
+            }
+        },
+        "expected": {
+            "type": ["null", "array"]
+        },
+        "prepare": {
+            "type": ["string", "array"],
+            "items": {"type": ["string", "array"], "items": {"type": "string"}}
+        },
+        "cleanup": {
+            "type": ["string", "array"],
+            "items": {"type": ["string", "array"], "items": {"type": "string"}}
+        }
+    },
+    "additionalProperties": false,
+    "default": {}
+}
