@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <functional>
 #include <future>
+#include <optional>
 #include <thread>
 #include <vector>
 #include "mt/queue.hh"

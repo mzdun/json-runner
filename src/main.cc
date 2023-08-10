@@ -26,8 +26,24 @@
 
 using namespace std::literals;
 
+namespace {
+	class return_category : public std::error_category {
+	public:
+		const char* name() const noexcept override { return "return_category"; }
+
+		std::string message(int value) const override {
+			return fmt::format("Application returned {}.", value);
+		}
+	};
+}  // namespace
+
+std::error_category const& category() {
+	static return_category cat;
+	return cat;
+}
+
 std::error_code make_return_code(int return_code) {
-	return std::make_error_code(std::errc::not_supported);
+	return std::error_code(return_code, category());
 }
 
 std::error_code install(
@@ -40,11 +56,15 @@ std::error_code install(
         additional_install) {
 	std::error_code ec{};
 
-	fs::remove_all(copy_dir, ec);
-	if (ec) return ec;
+#define FS(NAME, ARGS)                                                      \
+	fs::NAME ARGS;                                                          \
+	if (ec) {                                                               \
+		fmt::print("{}: error: {}, {}\n", #NAME, ec.value(), ec.message()); \
+		return ec;                                                          \
+	}
+	FS(remove_all, (copy_dir, ec));
 
-	fs::create_directories(copy_dir, ec);
-	if (ec) return ec;
+	FS(create_directories, (copy_dir, ec));
 
 	{
 		io::args_storage cmake{.stg{"--install", shell::get_path(binary_dir),
@@ -75,8 +95,11 @@ std::error_code install(
 	try {
 		additional_install(shell::get_path(copy_dir), rt);
 	} catch (std::error_code const& ec) {
+		fmt::print("exception: {}, {}\n", ec.value(), ec.message());
 		return ec;
 	} catch (fs::filesystem_error const& fs_error) {
+		fmt::print("exception: {}, {}\n", fs_error.code().value(),
+		           fs_error.code().message());
 		return fs_error.code();
 	}
 

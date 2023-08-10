@@ -58,16 +58,16 @@ namespace testbed {
 
 	template <typename Permissions>
 	Permissions readonly(Permissions current) {
-		if constexpr (sizeof(Permissions::_File_attribute_readonly) != 0) {
-			return Permissions::_File_attribute_readonly;
-		} else {
-			static constexpr auto all_read =
-			    std::to_underlying(Permissions::owner_read) |
-			    std::to_underlying(Permissions::group_read) |
-			    std::to_underlying(Permissions::others_read);
-			return static_cast<Permissions>(std::to_underlying(current) &
-			                                ~all_read);
-		}
+#ifdef _WIN32
+		return Permissions::_File_attribute_readonly;
+#else
+		static constexpr auto all_write =
+		    std::to_underlying(Permissions::owner_write) |
+		    std::to_underlying(Permissions::group_write) |
+		    std::to_underlying(Permissions::others_write);
+		return static_cast<Permissions>(std::to_underlying(current) &
+		                                ~all_write);
+#endif
 	}
 
 	bool commands::make_ro(fs::path const& filename) const {

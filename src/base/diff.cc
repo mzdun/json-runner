@@ -3,6 +3,7 @@
 
 #include "base/diff.hh"
 #include <fmt/format.h>
+#include <algorithm>
 #include <queue>
 #include <span>
 #include <vector>

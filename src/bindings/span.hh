@@ -6,7 +6,6 @@
 #include <chaiscript/chaiscript.hpp>
 #include <span>
 
-
 namespace chaiscript::bootstrap::standard_library {
 	template <typename ContainerType>
 	void random_access_container_type_2(const std::string& /*type*/,
@@ -39,6 +38,13 @@ namespace chaiscript::bootstrap::standard_library {
 		m.add(fun([](const ContainerType* a) { return a->empty(); }), "empty");
 	}
 
+	template <typename ContainerType>
+	void input_range_type_2(const std::string& type, Module& m) {
+		detail::input_range_type_impl<
+		    Bidir_Range<ContainerType, typename ContainerType::iterator> >(type,
+		                                                                   m);
+	}
+
 	template <typename SpanType>
 	void span_type(const std::string& type, Module& m) {
 		m.add(user_type<SpanType>(), type);
@@ -65,7 +71,7 @@ namespace chaiscript::bootstrap::standard_library {
 		container_type_2<SpanType>(type, m);
 		default_constructible_type<SpanType>(type, m);
 		assignable_type<SpanType>(type, m);
-		input_range_type<SpanType>(type, m);
+		input_range_type_2<SpanType>(type, m);
 	}
 
 	template <typename SpanType>

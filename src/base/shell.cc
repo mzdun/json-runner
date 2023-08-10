@@ -10,6 +10,12 @@
 #include "Windows.h"
 #endif
 
+#ifdef __linux__
+#include <stdlib.h>
+
+extern char** environ;
+#endif
+
 using namespace std::literals;
 
 namespace shell {
@@ -193,6 +199,24 @@ namespace shell {
 	}
 #endif
 
+#ifdef __linux__
+	std::map<std::string, std::string> get_env() {
+		std::map<std::string, std::string> result;
+
+		for (char** en = environ; *en; en++) {
+			auto view = std::string_view{*en};
+
+			auto const enter = view.find('=');
+			if (enter == std::wstring_view::npos) {
+				result[toupper(view)];
+			} else {
+				result[toupper(view.substr(0, enter))] = view.substr(enter + 1);
+			}
+		}
+		return result;
+	}
+#endif
+
 	void append(std::map<std::string, std::string>& env,
 	            std::string const& var,
 	            std::filesystem::path const& dir) {
@@ -226,6 +250,12 @@ namespace shell {
 	void putenv(std::string const& name, std::string const& var) {
 		SetEnvironmentVariableW(from_utf8(name).c_str(),
 		                        from_utf8(var).c_str());
+	}
+#endif
+
+#ifdef __linux__
+	void putenv(std::string const& name, std::string const& var) {
+		setenv(name.c_str(), var.c_str(), 1);
 	}
 #endif
 }  // namespace shell

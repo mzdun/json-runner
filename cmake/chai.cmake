@@ -20,8 +20,6 @@ if (NOT chaiscript_FOUND)
     set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
     set(BUILD_LIBFUZZ_TESTER OFF CACHE BOOL "" FORCE)
     set(BUILD_IN_CPP17_MODE ON CACHE BOOL "" FORCE)
-
-    add_subdirectory(${chaiscript_SOURCE_DIR} ${chaiscript_BINARY_DIR})
   endif()
 
   add_library(chaiscript INTERFACE IMPORTED GLOBAL)

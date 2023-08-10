@@ -8,6 +8,7 @@
 #include <map>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -56,7 +57,7 @@ namespace io {
 		args::arglist args{};
 		fs::path const* cwd{nullptr};
 		std::map<std::string, std::string> const* env{nullptr};
-		pipe pipe{pipe::none};
+		io::pipe pipe{pipe::none};
 		std::string_view input{};
 	};
 	capture run(run_opts const& options);
