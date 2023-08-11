@@ -205,12 +205,14 @@ namespace testbed {
 		~select_env() { tgt->current_rt = saved; }
 	};
 
-	bool test::run_cmds(runtime const& rt, std::span<strlist const> commands) {
+	bool test::run_cmds(runtime const& rt,
+	                    std::span<strlist const> commands,
+	                    std::string& listing) {
 		select_env from{this, &rt};
 
 		for (auto const& cmd : commands) {
 			auto expanded = rt.expand(cmd, {}, exp::generic);
-			if (!rt.run(*this, expanded.stg)) return false;
+			if (!rt.run(*this, expanded.stg, listing)) return false;
 		}
 		return true;
 	}
@@ -383,15 +385,16 @@ namespace testbed {
 	io::capture test::observe(
 	    std::pair<io::args_storage, std::vector<io::args_storage>>& calls,
 	    std::map<std::string, std::string> const& variables,
-	    runtime const& rt) const {
+	    runtime const& rt,
+	    std::string& listing) const {
 		auto run_cwd = linear ? nullptr : &cwd();
 
 		if (rt.debug) {
-			fmt::print(stderr,
-			           "\033[1;33m"
-			           "> {} {}\033[m\n",
-			           shell::get_generic_path(rt.rt_target),
-			           shell::join(calls.first.stg));
+			listing.append(
+			    fmt::format("\033[1;33m"
+			                "> {} {}\033[m\n",
+			                shell::get_generic_path(rt.rt_target),
+			                shell::join(calls.first.stg)));
 		}
 
 		auto result = io::run({
@@ -406,11 +409,11 @@ namespace testbed {
 			if (result.return_code) break;
 
 			if (rt.debug) {
-				fmt::print(stderr,
-				           "\033[1;33m"
-				           "> {} {}\033[m\n",
-				           shell::get_generic_path(rt.rt_target),
-				           shell::join(cmd.stg));
+				listing.append(
+				    fmt::format("\033[1;33m"
+				                "> {} {}\033[m\n",
+				                shell::get_generic_path(rt.rt_target),
+				                shell::join(cmd.stg)));
 			}
 
 			auto local = io::run({
@@ -435,29 +438,32 @@ namespace testbed {
 		return result;
 	}
 
-	std::optional<io::capture> test::run(
+	test_run_results test::run(
 	    std::map<std::string, std::string> const& variables,
 	    runtime const& rt) {
 		// build/.testing/X{16}
 		if (!mkdirs(rt.temp_dir)) {
-			return std::nullopt;
+			return {{}, std::nullopt};
 		}
 		if (!rmtree(rt.mocks_dir())) {
-			return std::nullopt;
+			return {{}, std::nullopt};
 		}
 
-		if (!run_cmds(rt, prepare)) return std::nullopt;
+		std::string listing{};
+		if (!run_cmds(rt, prepare, listing))
+			return {std::move(listing), std::nullopt};
 		auto expanded = expand_test_calls(rt);
 		auto const local_env = copy_environment_block(variables, rt);
 
-		auto result = observe(expanded, local_env, rt);
+		auto result = observe(expanded, local_env, rt, listing);
 
-		if (!run_cmds(rt, cleanup)) return std::nullopt;
+		if (!run_cmds(rt, cleanup, listing))
+			return {std::move(listing), std::nullopt};
 
 		rt.fix(result.output, patches);
 		rt.fix(result.error, patches);
 
-		return {std::move(result)};
+		return {std::move(listing), std::move(result)};
 	}
 
 	io::capture test::clip(io::capture const& actual) const {

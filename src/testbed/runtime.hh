@@ -31,7 +31,9 @@ namespace testbed {
 		    std::span<std::string const> cmd,
 		    std::map<std::string, std::string> const& stored_env,
 		    exp modifier) const;
-		bool run(commands& handler, std::span<std::string const> args) const;
+		bool run(commands& handler,
+		         std::span<std::string const> args,
+		         std::string& listing) const;
 		void fix(std::string& text,
 		         std::vector<std::pair<std::string, std::string>> const&
 		             patches) const;

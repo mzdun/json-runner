@@ -48,11 +48,22 @@ namespace {
 
 	bool run_tool(fs::path const& name,
 	              std::span<std::string const> args,
-	              fs::path const& cwd) {
+	              fs::path const& cwd,
+	              std::string& listing) {
 		io::args_storage copy{.stg{args.begin(), args.end()}};
-		auto const return_code =
-		    io::call({.exec = name, .args = copy.args(), .cwd = &cwd});
-		return return_code == 0;
+		auto proc = io::run({.exec = name,
+		                     .args = copy.args(),
+		                     .cwd = &cwd,
+		                     .pipe = io::pipe::outs});
+		if (!proc.error.empty()) {
+			if (proc.error.back() != '\n') proc.error.push_back('\n');
+			listing.append(proc.error);
+		}
+		if (!proc.output.empty()) {
+			if (proc.output.back() != '\n') proc.output.push_back('\n');
+			listing.append(proc.output);
+		}
+		return proc.return_code == 0;
 	}
 }  // namespace
 
@@ -111,7 +122,8 @@ struct Project {
 		                              std::span<std::string const>)> const&
 		               code) {
 			    auto pass_through = [code](struct testbed::commands& handler,
-			                               std::span<std::string const> args) {
+			                               std::span<std::string const> args,
+			                               std::string&) {
 				    try {
 					    return code(static_cast<testbed::test&>(handler), args);
 				    } catch (chaiscript::exception::eval_error const& ee) {
@@ -224,9 +236,9 @@ std::map<std::string, testbed::handler_info> Chai::ProjectInfo::handlers()
 		    .min_args = 0,
 		    .handler =
 		        [app](testbed::commands& handler,
-		              std::span<std::string const> args) {
+		              std::span<std::string const> args, std::string& listing) {
 			        auto& self = static_cast<testbed::test&>(handler);
-			        return run_tool(app, args, self.cwd());
+			        return run_tool(app, args, self.cwd(), listing);
 		        },
 		};
 	}
@@ -238,9 +250,11 @@ std::map<std::string, testbed::handler_info> Chai::ProjectInfo::handlers()
 	results[target] = {
 	    .min_args = 0,
 	    .handler =
-	        [](testbed::commands& handler, std::span<std::string const> args) {
+	        [](testbed::commands& handler, std::span<std::string const> args,
+	           std::string& listing) {
 		        auto& self = static_cast<testbed::test&>(handler);
-		        return run_tool(self.current_rt->rt_target, args, self.cwd());
+		        return run_tool(self.current_rt->rt_target, args, self.cwd(),
+		                        listing);
 	        },
 	};
 

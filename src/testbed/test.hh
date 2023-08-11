@@ -55,6 +55,10 @@ namespace testbed {
 		bool not_disabled() const;
 	};
 
+	struct test_run_results {
+		std::string prepare{};
+		std::optional<io::capture> capture{};
+	};
 	struct test : test_data, commands {
 		static constexpr size_t HORIZ_SPACE = 20;
 		test(test_data&& data) : test_data{std::move(data)} {}
@@ -65,7 +69,8 @@ namespace testbed {
 		bool mock(std::string const& exe, std::string const& link) override;
 		bool generate(std::string const& tmplt,
 		              std::string const& dst,
-		              std::span<std::string const> args) override;
+		              std::span<std::string const> args,
+		              std::string& listing) override;
 
 		static test load(fs::path const& filename,
 		                 size_t index,
@@ -79,11 +84,12 @@ namespace testbed {
 			return result;
 		}
 
-		bool run_cmds(runtime const&, std::span<strlist const> commands);
+		bool run_cmds(runtime const&,
+		              std::span<strlist const> commands,
+		              std::string& listing);
 
-		std::optional<io::capture> run(
-		    std::map<std::string, std::string> const&,
-		    runtime const&);
+		test_run_results run(std::map<std::string, std::string> const&,
+		                     runtime const&);
 		io::capture clip(io::capture const&) const;
 		std::string report(io::capture const&, runtime const&) const;
 
@@ -99,6 +105,7 @@ namespace testbed {
 		io::capture observe(
 		    std::pair<io::args_storage, std::vector<io::args_storage>>& calls,
 		    std::map<std::string, std::string> const& variables,
-		    runtime const& environment) const;
+		    runtime const& environment,
+		    std::string& listing) const;
 	};
 }  // namespace testbed

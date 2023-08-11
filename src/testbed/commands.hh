@@ -22,7 +22,8 @@ namespace testbed {
 
 	struct handler_info {
 		unsigned min_args{1};
-		std::function<bool(struct commands&, std::span<std::string const>)>
+		std::function<
+		    bool(struct commands&, std::span<std::string const>, std::string&)>
 		    handler;
 	};
 
@@ -45,7 +46,8 @@ namespace testbed {
 		virtual bool mock(std::string const& exe, std::string const& link) = 0;
 		virtual bool generate(std::string const& tmplt,
 		                      std::string const& dst,
-		                      std::span<std::string const> args) = 0;
+		                      std::span<std::string const> args,
+		                      std::string& listing) = 0;
 		bool shell() const;
 
 		static std::map<std::string, handler_info> handlers();

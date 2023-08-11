@@ -96,9 +96,11 @@ namespace testbed {
 	}
 
 	bool runtime::run(commands& handler,
-	                  std::span<std::string const> args) const {
+	                  std::span<std::string const> args,
+	                  std::string& listing) const {
 		if (args.empty()) {
-			fmt::print(stderr, "\033[1;31merror: command not provided\033[m\n");
+			listing.append(
+			    fmt::format("\033[1;31merror: command not provided\033[m\n"));
 			return false;
 		}
 
@@ -113,33 +115,32 @@ namespace testbed {
 		    handlers.find(can_fail ? std::string{command.data(), command.size()}
 		                           : args.front());
 		if (debug) {
-			fmt::print(stderr, "\033[1;36m> {}\033[m\n", shell::join(args));
+			listing.append(
+			    fmt::format("\033[1;36m> {}\033[m\n", shell::join(args)));
 		}
 
 		if (it == handlers.end()) {
-			fmt::print(stderr,
-			           "\033[1;31merror: command `{}` not found "
-			           "\033[1;37m[{}]\033[m\n",
-			           args.front(), shell::join(args));
+			listing.append(
+			    fmt::format("\033[1;31merror: command `{}` not found "
+			                "\033[1;37m[{}]\033[m\n",
+			                args.front(), shell::join(args)));
 			return false;
 		}
 		auto [min, call] = it->second;
 		args = args.subspan(1);
 		if (args.size() < min) {
-			fmt::print(stderr,
-			           "\033[1;31merror: command `{}` expects {}, got {} "
-			           "argument{}\033[m\n",
-			           args.front(), min, args.size(),
-			           args.size() == 1 ? "" : "s");
+			listing.append(fmt::format(
+			    "\033[1;31merror: command `{}` expects {}, got {} "
+			    "argument{}\033[m\n",
+			    args.front(), min, args.size(), args.size() == 1 ? "" : "s"));
 			return false;
 		}
-		auto const result = call(handler, args);
+		auto const result = call(handler, args, listing);
 		if (!result) {
 			if (!can_fail || command != "rm"sv) {
-				fmt::print(
-				    stderr,
+				listing.append(fmt::format(
 				    "\033[1;31merror: problem while handling `{} {}`\033[m\n",
-				    orig, shell::join(args));
+				    orig, shell::join(args)));
 			}
 			return can_fail;
 		}

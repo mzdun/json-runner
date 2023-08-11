@@ -137,7 +137,8 @@ class counters {
 public:
 	void report(outcome outcome,
 	            std::string_view test_ident,
-	            std::string_view message);
+	            std::string_view message,
+	            std::string_view prepare);
 
 	bool summary(size_t counter) const;
 
@@ -150,7 +151,8 @@ private:
 
 void counters::report(outcome result,
                       std::string_view test_ident,
-                      std::string_view message) {
+                      std::string_view message,
+                      std::string_view prepare) {
 	switch (result) {
 		case outcome::SKIPPED:
 			fmt::print("{test_id} {color}SKIPPED{reset}\n",
@@ -168,6 +170,7 @@ void counters::report(outcome result,
 			++save_;
 			return;
 		case outcome::CLIP_FAILED: {
+			fmt::print("{}", prepare);
 			auto msg = fmt::format(
 			    "{test_id} {color}FAILED (unknown check '{message}'){reset}",
 			    fmt::arg("test_id", test_ident), fmt::arg("message", message),
@@ -179,6 +182,7 @@ void counters::report(outcome result,
 			return;
 		}
 		case outcome::FAILED: {
+			fmt::print("{}", prepare);
 			if (!message.empty()) fmt::print("{}\n", message);
 			auto msg = fmt::format("{test_id} {color}FAILED{reset}",
 			                       fmt::arg("test_id", test_ident),
@@ -253,27 +257,32 @@ test_results run_test2(testbed::test& tested,
 	fmt::print("{}\n", test_ident);
 	auto actual = tested.run(variables, copy);
 
-	if (!actual) {
-		return {outcome::SKIPPED, std::move(test_ident), copy.temp_dir};
+	if (!actual.capture) {
+		return {outcome::SKIPPED, std::move(test_ident), copy.temp_dir,
+		        std::move(actual.prepare)};
 	}
 
 	if (!tested.expected) {
 		// TODO: store the new expected
-		tested.data.set(u8"expected", json::array{actual->return_code,
-		                                          to_lines(actual->output),
-		                                          to_lines(actual->error)});
+		tested.data.set(u8"expected",
+		                json::array{actual.capture->return_code,
+		                            to_lines(actual.capture->output),
+		                            to_lines(actual.capture->error)});
 		tested.store();
-		return {outcome::SAVED, std::move(test_ident), copy.temp_dir};
+		return {outcome::SAVED, std::move(test_ident), copy.temp_dir,
+		        std::move(actual.prepare)};
 	}
 
-	auto clipped = tested.clip(*actual);
+	auto clipped = tested.clip(*actual.capture);
 
-	if ((*actual == *tested.expected) || (clipped == *tested.expected)) {
-		return {outcome::OK, std::move(test_ident), copy.temp_dir};
+	if ((*actual.capture == *tested.expected) ||
+	    (clipped == *tested.expected)) {
+		return {outcome::OK, std::move(test_ident), copy.temp_dir,
+		        std::move(actual.prepare)};
 	}
 
 	return {outcome::FAILED, std::move(test_ident), copy.temp_dir,
-	        tested.report(clipped, copy)};
+	        std::move(actual.prepare), tested.report(clipped, copy)};
 }
 
 test_results run_test(testbed::test& tested,
@@ -464,7 +473,8 @@ int tool(::args::args_view const& args) {
 		for (auto& future : results) {
 			auto results = future.get();
 			counters.report(results.result, results.task_ident,
-			                results.report ? *results.report : ""sv);
+			                results.report ? *results.report : ""sv,
+			                results.prepare);
 			std::error_code ignore{};
 			fs::remove_all(results.temp_dir, ignore);
 		}
@@ -475,7 +485,8 @@ int tool(::args::args_view const& args) {
 
 		auto results = run_test(test, variables, rt);
 		counters.report(results.result, results.task_ident,
-		                results.report ? *results.report : ""sv);
+		                results.report ? *results.report : ""sv,
+		                results.prepare);
 		std::error_code ignore{};
 		fs::remove_all(results.temp_dir, ignore);
 	}

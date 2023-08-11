@@ -182,10 +182,9 @@ namespace testbed {
 	}
 
 	std::map<std::string, handler_info> commands::handlers() {
-#define HANDLER(METHODCALL)                                    \
-	[](commands& handler, std::span<std::string const> args) { \
-		return handler.METHODCALL;                             \
-	}
+#define HANDLER(METHODCALL)                                  \
+	[](commands& handler, std::span<std::string const> args, \
+	   [[maybe_unused]] std::string& listing) { return handler.METHODCALL; }
 
 #define P(ID) shell::make_u8path(args[ID])
 #define P0 P(0)
@@ -206,7 +205,8 @@ namespace testbed {
 		    {"rm"s, {.handler = HANDLER(rmtree(P0))}},
 		    {"touch"s,
 		     {.handler =
-		          [](commands& handler, std::span<std::string const> args) {
+		          [](commands& handler, std::span<std::string const> args,
+		             std::string&) {
 			          auto content = args.size() > 1 ? &S1 : nullptr;
 			          return handler.touch(P0, content);
 		          }}},
@@ -215,7 +215,8 @@ namespace testbed {
 		     {.min_args = 2, .handler = HANDLER(store_variable(S0, A1))}},
 		    {"mock"s, {.min_args = 2, .handler = HANDLER(mock(S0, S1))}},
 		    {"generate"s,
-		     {.min_args = 3, .handler = HANDLER(generate(S0, S1, A2))}},
+		     {.min_args = 3,
+		      .handler = HANDLER(generate(S0, S1, A2, listing))}},
 		    {"shell"s, {.min_args = 0, .handler = HANDLER(shell())}},
 		};
 	}
@@ -279,7 +280,14 @@ namespace testbed {
 
 	bool test::generate(std::string const& tmplt,
 	                    std::string const& dst,
-	                    std::span<std::string const> args) {
+	                    std::span<std::string const> args,
+	                    std::string& listing) {
+		if (current_rt->debug) {
+			listing.append(fmt::format(
+			    "  template: {}\n"
+			    "  output:   {}\n",
+			    shell::get_u8path(path(tmplt)), shell::get_u8path(path(dst))));
+		}
 		auto file = io::fopen(path(tmplt));
 		if (!file) return false;
 		auto const tmplt_bytes = file.read();

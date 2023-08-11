@@ -19,6 +19,7 @@ struct test_results {
 	outcome result;
 	std::string task_ident;
 	fs::path temp_dir;
+	std::string prepare;
 	std::optional<std::string> report{std::nullopt};
 };
 
