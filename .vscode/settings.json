@@ -91,6 +91,9 @@
         "*.tcc": "cpp",
         "memory_resource": "cpp",
         "string_view": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "cerrno": "cpp",
+        "cwctype": "cpp",
+        "semaphore": "cpp"
     }
 }

@@ -9,6 +9,7 @@
 #include <span>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -21,23 +22,6 @@ namespace io {
 
 		bool operator==(capture const&) const noexcept = default;
 	};
-
-	enum class pipe {
-		none = 0x0000,
-		output = 0x0001,
-		error = 0x0002,
-		input = 0x0004,
-		output_devnull = 0x0008,
-		error_devnull = 0x0010,
-		input_devnull = 0x0020,
-		outs = output | error,
-		all = input | output | error,
-	};
-
-	inline pipe operator&(pipe lhs, pipe rhs) noexcept {
-		return static_cast<pipe>(std::to_underlying(lhs) &
-		                         std::to_underlying(rhs));
-	}
 
 	struct args_storage {
 		std::vector<std::string> stg{};
@@ -52,13 +36,42 @@ namespace io {
 		}
 	};
 
+#define TAG_STRUCT(NAME)                                             \
+	struct NAME {                                                    \
+		bool operator==(NAME const&) const noexcept { return true; } \
+	}
+
+	TAG_STRUCT(piped);
+	TAG_STRUCT(devnull);
+	TAG_STRUCT(future_terminal);
+	struct stream_decl
+	    : std::variant<std::nullptr_t, piped, devnull, future_terminal> {
+		using base =
+		    std::variant<std::nullptr_t, piped, devnull, future_terminal>;
+		using base::base;
+
+		template <typename Tag>
+		    requires std::same_as<Tag, std::nullptr_t> ||
+		             std::same_as<Tag, piped> || std::same_as<Tag, devnull> ||
+		             std::same_as<Tag, future_terminal>
+		friend bool operator==(stream_decl const& decl, Tag rhs) noexcept {
+			return std::holds_alternative<Tag>(decl);
+		}
+
+		friend bool operator==(stream_decl const& decl,
+		                       base const& rhs) noexcept {
+			return static_cast<base const&>(decl) == rhs;
+		}
+	};
+
 	struct run_opts {
 		fs::path const& exec;
 		args::arglist args{};
 		fs::path const* cwd{nullptr};
 		std::map<std::string, std::string> const* env{nullptr};
-		io::pipe pipe{pipe::none};
-		std::string_view input{};
+		std::optional<std::string_view> input{};
+		stream_decl output{};
+		stream_decl error{};
 		std::string* debug{nullptr};
 	};
 	capture run(run_opts const& options);
@@ -75,10 +88,10 @@ namespace io {
 		            .args = options.args,
 		            .cwd = options.cwd,
 		            .env = options.env,
-		            .pipe = pipe::none,
+		            .output = piped{},
 		            .debug = options.debug})
 		    .return_code;
-	}
+	}  // namespace io
 
 	std::optional<fs::path> find_program(std::span<std::string const> names,
 	                                     fs::path const& hint);

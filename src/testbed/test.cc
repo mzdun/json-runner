@@ -402,7 +402,8 @@ namespace testbed {
 		    .args = calls.first.args(),
 		    .cwd = run_cwd,
 		    .env = &variables,
-		    .pipe = io::pipe::outs,
+		    .output = io::piped{},
+		    .error = io::piped{},
 		    .debug = &listing,
 		});
 
@@ -422,7 +423,8 @@ namespace testbed {
 			    .args = cmd.args(),
 			    .cwd = run_cwd,
 			    .env = &variables,
-			    .pipe = io::pipe::outs,
+			    .output = io::piped{},
+			    .error = io::piped{},
 			    .debug = &listing,
 			});
 

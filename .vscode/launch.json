@@ -19,8 +19,8 @@
             ],
             "environment": [
                 {
-                    "name": "RUN_PARALLEL",
-                    "value": "1"
+                    "name": "RUN_LINEAR",
+                    "value": "0"
                 }
             ],
             "preLaunchTask": "CMake: build (debug)"

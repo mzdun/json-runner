@@ -2,6 +2,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include "io/run.hh"
+#include <fcntl.h>
 #include <fmt/format.h>
 #include <spawn.h>
 #include <sys/wait.h>
@@ -30,6 +31,8 @@ using namespace std::literals;
 
 namespace io {
 	namespace {
+		enum class pipe { output, error, input };
+
 		std::string env(char const* name) {
 			auto value = getenv(name);
 			return value ? value : std::string{};
@@ -71,27 +74,71 @@ namespace io {
 			void close_read() { close_side(read); }
 			void close_write() { close_side(write); }
 
-			void dup_read(int stdio) {
-				close_write();
-				if (read == -1) return;
-				::close(stdio);
-				::dup2(read, stdio);
-				close_read();
-			}
-
-			void dup_write(int stdio) {
-				close_read();
-				if (write == -1) return;
-				::close(stdio);
-				::dup2(write, stdio);
-				close_write();
-			}
-
-			bool open() {
+			bool open_pipe(std::string& debug) {
 				int fd[2];
-				if (::pipe(fd) == -1) return false;
+				if (::pipe(fd) == -1) {
+					debug.append(fmt::format("open_pipe: error {}\n", errno));
+					return false;
+				}
 				read = fd[0];
 				write = fd[1];
+				debug.append(fmt::format("open_pipe -> read:{} write:{}\n",
+				                         read, write));
+				return true;
+			}
+
+			bool open_std(pipe direction) {
+				auto fd = direction == pipe::input    ? 0
+				          : direction == pipe::output ? 1
+				                                      : 2;
+				if (direction == pipe::input)
+					read = fd;
+				else
+					write = fd;
+				return true;
+			}
+
+			bool open_devnull(std::string& debug) {
+				write = ::open("/dev/null", O_RDWR);
+				debug.append(fmt::format("open_devnull -> fd:{}\n", write));
+				return true;
+			}
+
+			bool open(std::optional<std::string_view> const& input,
+			          pipe,
+			          std::string& debug) {
+				if (!input) return true;
+				debug.append("input: ");
+				return open_pipe(debug);
+			}
+
+			bool open(stream_decl const& decl,
+			          pipe direction,
+			          std::string& debug) {
+				switch (direction) {
+					case pipe::input:
+						debug.append("input?!?");
+						break;
+					case pipe::output:
+						debug.append("output");
+						break;
+					case pipe::error:
+						debug.append("error");
+						break;
+				}
+				debug.append(": ");
+				if (decl == nullptr) debug.append("nothing: ");
+				if (decl == piped{}) debug.append("piped: ");
+				if (decl == devnull{}) debug.append("/dev/null: ");
+				if (decl == future_terminal{}) debug.append("pty: ");
+
+				if (decl == piped{} || decl == future_terminal{}) {
+					return open_pipe(debug);
+				}
+				if (decl == devnull{}) {
+					return open_devnull(debug);
+				}
+				debug.append("<true>\n");
 				return true;
 			}
 
@@ -191,13 +238,12 @@ namespace io {
 			pipe_type output{};
 			pipe_type error{};
 
-			bool open(pipe directions) {
-#define OPEN(DIRECTION)                                    \
-	if ((directions & pipe::DIRECTION) == pipe::DIRECTION) \
-		if (!DIRECTION.open()) {                           \
-			[[unlikely]];                                  \
-			return false;                                  \
-		}
+			bool open(run_opts const& opts, std::string& debug) {
+#define OPEN(DIRECTION)                                            \
+	if (!DIRECTION.open(opts.DIRECTION, pipe::DIRECTION, debug)) { \
+		[[unlikely]];                                              \
+		return false;                                              \
+	}
 
 				OPEN(input);
 				OPEN(output);
@@ -205,27 +251,25 @@ namespace io {
 				return true;
 			}
 
-			std::string io(std::string_view input_data,
-			               capture& output_data,
-			               pipe directions) {
+			std::string io(std::optional<std::string_view> const& input_data,
+			               capture& output_data) {
 				input.close_read();
 				output.close_write();
 				error.close_write();
 
 				std::vector<std::thread> threads{};
-				threads.reserve(
-				    ((directions & pipe::input) == pipe::input ? 1u : 0u) +
-				    ((directions & pipe::output) == pipe::output ? 1u : 0u) +
-				    ((directions & pipe::error) == pipe::error ? 1u : 0u));
+				threads.reserve((input.write > -1 && input_data ? 1u : 0u) +
+				                (output.read > -1 ? 1u : 0u) +
+				                (error.read > -1 ? 1u : 0u));
 
-				if ((directions & pipe::input) == pipe::input)
-					threads.push_back(input.async_write(input_data));
+				if (input.write > -1 && input_data)
+					threads.push_back(input.async_write(*input_data));
 
-				if ((directions & pipe::output) == pipe::output)
+				if (output.read > -1)
 					threads.push_back(
 					    output.async_read(output_data.output, "stdout"sv));
 
-				if ((directions & pipe::error) == pipe::error)
+				if (error.read > -1)
 					threads.push_back(
 					    error.async_read(output_data.error, "stderr"sv));
 
@@ -240,12 +284,6 @@ namespace io {
 				result.append(output.debug);
 				result.append(error.debug);
 				return result;
-			}
-
-			void dup() {
-				input.dup_read(0);
-				output.dup_write(1);
-				error.dup_write(2);
 			}
 		};
 
@@ -364,7 +402,7 @@ namespace io {
 
 		std::string debug;
 		pipes_type pipes{};
-		if (!pipes.open(options.pipe)) {
+		if (!pipes.open(options, debug)) {
 			// GCOV_EXCL_START[POSIX]
 			[[unlikely]];
 			debug.append("pipes did not open\n");
@@ -375,9 +413,10 @@ namespace io {
 		auto child = spawn(executable, options.args, options.env, options.cwd,
 		                   pipes, debug);
 
-		debug.append(pipes.io(options.input, result, options.pipe));
+		debug.append(pipes.io(options.input, result));
 
 		int status;
+		errno = 0;
 		auto const ret_pid = waitpid(child, &status, 0);
 
 #if defined(STDOUT_DUMP)

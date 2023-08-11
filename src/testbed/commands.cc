@@ -244,7 +244,7 @@ namespace testbed {
 		auto proc = io::run({.exec = exec,
 		                     .args = copy.args(),
 		                     .cwd = &cwd(),
-		                     .pipe = io::pipe::output,
+		                     .output = io::piped{},
 		                     .debug = &debug});
 		if (proc.return_code != 0) return false;
 		auto output = trim(proc.output);

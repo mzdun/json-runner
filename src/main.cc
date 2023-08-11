@@ -74,7 +74,7 @@ std::error_code install(
 			std::string debug{};
 			auto proc = io::run({.exec = "cmake",
 			                     .args = cmake.args(),
-			                     .pipe = io::pipe::output,
+			                     .output = io::devnull{},
 			                     .debug = &debug});
 			fputs(debug.c_str(), stdout);
 			if (proc.return_code) return make_return_code(proc.return_code);
@@ -86,7 +86,7 @@ std::error_code install(
 				cmake.stg.back() = component;
 				auto proc = io::run({.exec = "cmake",
 				                     .args = cmake.args(),
-				                     .pipe = io::pipe::output,
+				                     .output = io::devnull{},
 				                     .debug = &debug});
 				fputs(debug.c_str(), stdout);
 				if (proc.return_code) return make_return_code(proc.return_code);

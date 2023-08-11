@@ -54,7 +54,8 @@ namespace {
 		auto proc = io::run({.exec = name,
 		                     .args = copy.args(),
 		                     .cwd = &cwd,
-		                     .pipe = io::pipe::outs,
+		                     .output = io::piped{},
+		                     .error = io::piped{},
 		                     .debug = &listing});
 		if (!proc.error.empty()) {
 			if (proc.error.back() != '\n') proc.error.push_back('\n');
