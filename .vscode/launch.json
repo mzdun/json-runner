@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cppdbg",
+            "request": "launch",
+            "name": "Launch runner (gdb)",
+            "cwd": "${workspaceFolder}/../git2-cxx",
+            "program": "${workspaceFolder}/build/debug/bin/runner",
+            "args": [
+                "--preset",
+                "release",
+                "--tests",
+                "main-set",
+                "--debug"
+            ],
+            "environment": [
+                {
+                    "name": "RUN_PARALLEL",
+                    "value": "1"
+                }
+            ],
+            "preLaunchTask": "CMake: build (debug)"
+        }
+    ]
+}
