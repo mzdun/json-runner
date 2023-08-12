@@ -58,12 +58,6 @@ namespace io {
 			return {};
 		}
 
-		static pid_t pid = -1;
-
-		// GCOV_EXCL_START[POSIX]
-		void forward_signal(int signo) { kill(pid, signo); }
-		// GCOV_EXCL_STOP
-
 		struct pipe_type {
 			int read{-1};
 			int write{-1};
@@ -255,12 +249,12 @@ namespace io {
 			}
 		};
 
-		void spawn(std::filesystem::path const& program_path,
-		           args::arglist args,
-		           std::map<std::string, std::string> const* env_ptr,
-		           std::filesystem::path const* cwd,
-		           pipes_type const& pipes,
-		           std::string& debug) {
+		pid_t spawn(std::filesystem::path const& program_path,
+		            args::arglist args,
+		            std::map<std::string, std::string> const* env_ptr,
+		            std::filesystem::path const* cwd,
+		            pipes_type const& pipes,
+		            std::string& debug) {
 			std::vector<char*> argv;
 			argv.reserve(2 + args.size());  // arg0 and NULL
 			auto filename = program_path.filename();
@@ -304,7 +298,7 @@ namespace io {
 			                decltype([](posix_spawn_file_actions_t* a) {
 				                posix_spawn_file_actions_destroy(a);
 			                })>
-			    anchor{&actions};
+			    actions_anchor{&actions};
 
 			if (cwd)
 				CHECK(posix_spawn_file_actions_addchdir_np(&actions,
@@ -341,12 +335,21 @@ namespace io {
 				                                        pipes.error.write));
 			}
 
-			// fmt::print("actions: [size:{} capacity:{}]\n", actions.__used,
-			//            actions.__allocated);
+			posix_spawnattr_t attrs{};
+			CHECK(posix_spawnattr_init(&attrs));
+			std::unique_ptr<posix_spawnattr_t,
+			                decltype([](posix_spawnattr_t* a) {
+				                posix_spawnattr_destroy(a);
+			                })>
+			    attr_anchor{&attrs};
 
+			CHECK(posix_spawnattr_setpgroup(&attrs, 0));
+
+			pid_t result;
 			CHECK(posix_spawn(
-			    &pid, program_path.c_str(), &actions, nullptr, argv.data(),
+			    &result, program_path.c_str(), &actions, &attrs, argv.data(),
 			    environment.empty() ? environ : environment.data()));
+			return result;
 		}
 	}  // namespace
 
@@ -369,18 +372,13 @@ namespace io {
 			return result;
 		}  // GCOV_EXCL_STOP
 
-		spawn(executable, options.args, options.env, options.cwd, pipes, debug);
-
-		signal(SIGINT, forward_signal);
-		signal(SIGTERM, forward_signal);
-#if defined(SIGQUIT)
-		signal(SIGQUIT, forward_signal);
-#endif  // defined(SIGQUIT)
+		auto child = spawn(executable, options.args, options.env, options.cwd,
+		                   pipes, debug);
 
 		debug.append(pipes.io(options.input, result, options.pipe));
 
 		int status;
-		auto const ret_pid = waitpid(pid, &status, 0);
+		auto const ret_pid = waitpid(child, &status, 0);
 
 #if defined(STDOUT_DUMP)
 		auto const err = errno;
@@ -392,7 +390,7 @@ namespace io {
 		debug.append(fmt::format(
 		    "status[{}/{}, {}: {}]: {:x}; exit: {}, {}; term: {}, {} (core: "
 		    "{}); stop: {}, {}\n",
-		    pid, ret_pid, err, str_error_msg, status,
+		    child, ret_pid, err, str_error_msg, status,
 		    WIFEXITED(status) ? "yes"sv : "no"sv,
 		    WIFEXITED(status) ? fmt::to_string(static_cast<int>(
 		                            static_cast<char>(WEXITSTATUS(status))))
