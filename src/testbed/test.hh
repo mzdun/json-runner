@@ -43,6 +43,10 @@ namespace testbed {
 		std::map<std::string, test_variable> env{};
 		std::vector<std::pair<std::string, std::string>> patches{};
 		checks check{testbed::check::all, testbed::check::all};
+		struct out_capture_t {
+			io::stream_decl output{io::piped{}};
+			io::stream_decl error{io::piped{}};
+		} out_capture{};
 
 		static test_data load(fs::path const& filename,
 		                      size_t index,

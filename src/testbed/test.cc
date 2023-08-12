@@ -312,6 +312,48 @@ namespace testbed {
 		auto expected = expected_from_json(it->second, ok);
 		if (!ok) return {.filename = filename, .ok{false}};
 
+		out_capture_t out_capture{.output = io::piped{}, .error = io::piped{}};
+		if (auto it = root_map->find(u8"output"); it != root_map->end()) {
+			static constexpr auto out_pty = u8"pty"sv;
+			static constexpr auto out_pipe = u8"pipe"sv;
+			static constexpr auto out_stderr = u8"stderr"sv;
+			static constexpr auto out_stdout = u8"stdout"sv;
+			if (auto output = cast<json::string>(it->second); output) {
+				if (*output == out_pty) {
+					out_capture.output = io::terminal{};
+					out_capture.error = io::redir_to_output{};
+				} else if (*output == out_stderr) {
+					out_capture.output = io::redir_to_error{};
+					out_capture.error = io::piped{};
+				} else if (*output == out_stdout) {
+					out_capture.output = io::piped{};
+					out_capture.error = io::redir_to_output{};
+				} else
+					ok = *output == out_pipe;
+			} else if (auto obj = cast<json::map>(it->second); obj) {
+				if (auto out = cast<json::string>(obj, u8"stdout"); out) {
+					if (*out == out_pty)
+						out_capture.output = io::terminal{};
+					else if (*out == out_stderr)
+						out_capture.output = io::redir_to_error{};
+					else
+						ok = *out == out_pipe;
+				}
+
+				if (auto err = cast<json::string>(obj, u8"stdout"); err) {
+					if (*err == out_pty)
+						out_capture.error = io::terminal{};
+					else if (*err == out_stdout)
+						out_capture.error = io::redir_to_output{};
+					else
+						ok = *err == out_pipe;
+				}
+			} else {
+				ok = false;
+			}
+		}
+		if (!ok) return {.filename = filename, .ok{false}};
+
 		auto lang = get(root_map, u8"lang", "en"sv);
 		auto const linear = get(root_map, u8"linear", false);
 		auto const disabled = get_disabled(root_map);
@@ -339,6 +381,7 @@ namespace testbed {
 		    .env = std::move(env),
 		    .patches = std::move(patches),
 		    .check = check,
+		    .out_capture = out_capture,
 		};
 	}
 
@@ -402,8 +445,8 @@ namespace testbed {
 		    .args = calls.first.args(),
 		    .cwd = run_cwd,
 		    .env = &variables,
-		    .output = io::piped{},
-		    .error = io::piped{},
+		    .output = out_capture.output,
+		    .error = out_capture.error,
 		    .debug = &listing,
 		});
 
@@ -423,8 +466,8 @@ namespace testbed {
 			    .args = cmd.args(),
 			    .cwd = run_cwd,
 			    .env = &variables,
-			    .output = io::piped{},
-			    .error = io::piped{},
+			    .output = out_capture.output,
+			    .error = out_capture.error,
 			    .debug = &listing,
 			});
 

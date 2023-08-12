@@ -43,17 +43,30 @@ namespace io {
 
 	TAG_STRUCT(piped);
 	TAG_STRUCT(devnull);
-	TAG_STRUCT(future_terminal);
-	struct stream_decl
-	    : std::variant<std::nullptr_t, piped, devnull, future_terminal> {
-		using base =
-		    std::variant<std::nullptr_t, piped, devnull, future_terminal>;
+	TAG_STRUCT(redir_to_output);
+	TAG_STRUCT(redir_to_error);
+	TAG_STRUCT(terminal);
+
+	struct stream_decl : std::variant<std::nullptr_t,
+	                                  piped,
+	                                  devnull,
+	                                  redir_to_output,
+	                                  redir_to_error,
+	                                  terminal> {
+		using base = std::variant<std::nullptr_t,
+		                          piped,
+		                          devnull,
+		                          redir_to_output,
+		                          redir_to_error,
+		                          terminal>;
 		using base::base;
 
 		template <typename Tag>
 		    requires std::same_as<Tag, std::nullptr_t> ||
 		             std::same_as<Tag, piped> || std::same_as<Tag, devnull> ||
-		             std::same_as<Tag, future_terminal>
+		             std::same_as<Tag, redir_to_output> ||
+		             std::same_as<Tag, redir_to_error> ||
+		             std::same_as<Tag, terminal>
 		friend bool operator==(stream_decl const& decl, Tag rhs) noexcept {
 			return std::holds_alternative<Tag>(decl);
 		}

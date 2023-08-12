@@ -54,13 +54,10 @@ namespace {
 		auto proc = io::run({.exec = name,
 		                     .args = copy.args(),
 		                     .cwd = &cwd,
-		                     .output = io::piped{},
-		                     .error = io::piped{},
+		                     .output = io::terminal{},
+		                     .error = io::redir_to_output{},
 		                     .debug = &listing});
-		if (!proc.error.empty()) {
-			if (proc.error.back() != '\n') proc.error.push_back('\n');
-			listing.append(proc.error);
-		}
+
 		if (!proc.output.empty()) {
 			if (proc.output.back() != '\n') proc.output.push_back('\n');
 			listing.append(proc.output);

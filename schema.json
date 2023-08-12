@@ -26,12 +26,20 @@
         "check": {
             "type": "object",
             "properties": {
-                "stdin": {"enum": ["all", "begin", "end"]},
+                "stdout": {"enum": ["all", "begin", "end"]},
                 "stderr": {"enum": ["all", "begin", "end"]}
             }
         },
         "expected": {
             "type": ["null", "array"]
+        },
+        "output": {
+            "type": ["object", "string"],
+            "pattern": "^(pty|pipe|stdout|stderr)$",
+            "properties": {
+                "stdout": {"pattern": "^(pty|pipe|stderr)$"},
+                "stderr": {"pattern": "^(pty|pipe|stdout)$"}
+            }
         },
         "prepare": {
             "type": ["string", "array"],

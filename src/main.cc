@@ -144,7 +144,8 @@ public:
 	void report(outcome outcome,
 	            std::string_view test_ident,
 	            std::string_view message,
-	            std::string_view prepare);
+	            std::string_view prepare,
+	            bool debug);
 
 	bool summary(size_t counter) const;
 
@@ -158,9 +159,11 @@ private:
 void counters::report(outcome result,
                       std::string_view test_ident,
                       std::string_view message,
-                      std::string_view prepare) {
+                      std::string_view prepare,
+                      bool debug) {
 	switch (result) {
 		case outcome::SKIPPED:
+			if (debug) fmt::print("{}", prepare);
 			fmt::print("{test_id} {color}SKIPPED{reset}\n",
 			           fmt::arg("test_id", test_ident),
 			           fmt::arg("color", color::skipped),
@@ -168,6 +171,7 @@ void counters::report(outcome result,
 			++skip_;
 			return;
 		case outcome::SAVED:
+			if (debug) fmt::print("{}", prepare);
 			fmt::print("{test_id} {color}saved{reset}\n",
 			           fmt::arg("test_id", test_ident),
 			           fmt::arg("color", color::skipped),
@@ -201,6 +205,7 @@ void counters::report(outcome result,
 			return;
 		}
 		case outcome::OK:
+			if (debug) fmt::print("{}", prepare);
 			fmt::print("{test_id} {color}PASSED{reset}\n",
 			           fmt::arg("test_id", test_ident),
 			           fmt::arg("color", color::passed),
@@ -486,7 +491,7 @@ int tool(::args::args_view const& args) {
 			auto results = future.get();
 			counters.report(results.result, results.task_ident,
 			                results.report ? *results.report : ""sv,
-			                results.prepare);
+			                results.prepare, rt.debug);
 			std::error_code ignore{};
 			fs::remove_all(results.temp_dir, ignore);
 		}
@@ -500,7 +505,7 @@ int tool(::args::args_view const& args) {
 		auto results = run_test(test, variables, rt);
 		counters.report(results.result, results.task_ident,
 		                results.report ? *results.report : ""sv,
-		                results.prepare);
+		                results.prepare, rt.debug);
 		std::error_code ignore{};
 		fs::remove_all(results.temp_dir, ignore);
 	}

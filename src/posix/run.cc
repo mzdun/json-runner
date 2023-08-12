@@ -130,14 +130,29 @@ namespace io {
 				if (decl == nullptr) debug.append("nothing: ");
 				if (decl == piped{}) debug.append("piped: ");
 				if (decl == devnull{}) debug.append("/dev/null: ");
-				if (decl == future_terminal{}) debug.append("pty: ");
+				if (decl == redir_to_output{}) debug.append(">&1: ");
+				if (decl == redir_to_error{}) debug.append(">&2: ");
+				if (decl == terminal{}) debug.append("pty: ");
 
-				if (decl == piped{} || decl == future_terminal{}) {
-					return open_pipe(debug);
+				if (decl == piped{}) return open_pipe(debug);
+				if (decl == terminal{}) return open_pipe(debug);
+				if (decl == devnull{}) return open_devnull(debug);
+
+				if (decl == redir_to_output{}) {
+					debug.append(fmt::format(
+					    "{} to output, {}\n",
+					    direction == pipe::error ? "error"sv : "output"sv,
+					    direction == pipe::error ? "ok"sv : "will fail"sv));
+					return direction == pipe::error;
 				}
-				if (decl == devnull{}) {
-					return open_devnull(debug);
+				if (decl == redir_to_error{}) {
+					debug.append(fmt::format(
+					    "{} to error, {}\n",
+					    direction == pipe::output ? "output"sv : "error"sv,
+					    direction == pipe::output ? "ok"sv : "will fail"sv));
+					return direction == pipe::output;
 				}
+
 				debug.append("<true>\n");
 				return true;
 			}
@@ -248,6 +263,18 @@ namespace io {
 				OPEN(input);
 				OPEN(output);
 				OPEN(error);
+
+				if (opts.output == redir_to_error{}) {
+					if (opts.error == redir_to_output{}) {
+						debug.append(" 2>&1 1>&2 is not supported\n");
+						return false;
+					}
+					output.write = ::dup(error.write);
+				}
+
+				if (opts.error == redir_to_output{}) {
+					error.write = ::dup(output.write);
+				}
 				return true;
 			}
 
