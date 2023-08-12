@@ -403,6 +403,7 @@ namespace testbed {
 		    .cwd = run_cwd,
 		    .env = &variables,
 		    .pipe = io::pipe::outs,
+		    .debug = &listing,
 		});
 
 		for (auto& cmd : calls.second) {
@@ -422,6 +423,7 @@ namespace testbed {
 			    .cwd = run_cwd,
 			    .env = &variables,
 			    .pipe = io::pipe::outs,
+			    .debug = &listing,
 			});
 
 			result.return_code = local.return_code;

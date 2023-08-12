@@ -71,18 +71,24 @@ std::error_code install(
 		                            "--config", CMAKE_BUILD_TYPE, "--prefix",
 		                            shell::get_path(copy_dir)}};
 		if (components.empty()) {
+			std::string debug{};
 			auto proc = io::run({.exec = "cmake",
 			                     .args = cmake.args(),
-			                     .pipe = io::pipe::output});
+			                     .pipe = io::pipe::output,
+			                     .debug = &debug});
+			fputs(debug.c_str(), stdout);
 			if (proc.return_code) return make_return_code(proc.return_code);
 		} else {
 			cmake.stg.push_back("--component");
 			cmake.stg.push_back({});
 			for (auto const& component : components) {
+				std::string debug{};
 				cmake.stg.back() = component;
 				auto proc = io::run({.exec = "cmake",
 				                     .args = cmake.args(),
-				                     .pipe = io::pipe::output});
+				                     .pipe = io::pipe::output,
+				                     .debug = &debug});
+				fputs(debug.c_str(), stdout);
 				if (proc.return_code) return make_return_code(proc.return_code);
 			}
 		}
@@ -401,11 +407,14 @@ int tool(::args::args_view const& args) {
 				test.nullify(lang);
 				continue;
 			}
-			fmt::print("{}: {}\n", unfiltered_count,
-			           shell::get_path(test.filename));
 			tests.push_back(std::move(test));
 		}
 		if (nullify) return 0;
+	}
+
+	if (tests.empty()) {
+		fmt::print(stderr, "No tests to run.\n");
+		return 0;
 	}
 
 	auto variables = shell::get_env();
@@ -445,10 +454,11 @@ int tool(::args::args_view const& args) {
 	fmt::print("{}{}\n", mk_label("$INST"sv),
 	           shell::get_path(rt.rt_target.parent_path()));
 	fmt::print("{}{}\n", mk_label("$TMP"sv), shell::get_path(rt.temp_dir));
-	fmt::print("{}{}\n", mk_label("JSON horiz"sv), testbed::test::HORIZ_SPACE);
-	fmt::print("chai patches:\n");
+	// fmt::print("{}{}\n", mk_label("JSON horiz"sv),
+	// testbed::test::HORIZ_SPACE);
+	fmt::print("common patches:\n");
 	for (auto const& [expr, replacement] : info.common_patches)
-		fmt::print("  - {} -> {}\n", repr(expr), repr(replacement));
+		fmt::print("  {}: {},\n", repr(expr), repr(replacement));
 
 	::counters counters{};
 
@@ -462,6 +472,8 @@ int tool(::args::args_view const& args) {
 		std::vector<std::future<test_results>> results{};
 
 		results.reserve(tests.size());
+
+		fmt::print("\nrunning parallel....\n");
 
 		for (auto& test : tests) {
 			if (test.linear) continue;
@@ -479,6 +491,8 @@ int tool(::args::args_view const& args) {
 			fs::remove_all(results.temp_dir, ignore);
 		}
 	}
+
+	fmt::print("\nrunning linear....\n");
 
 	for (auto& test : tests) {
 		if (!(RUN_LINEAR || test.linear)) continue;

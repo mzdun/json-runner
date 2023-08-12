@@ -42,7 +42,8 @@ namespace testbed {
 		bool touch(fs::path const& filename, std::string const* content) const;
 		bool unpack(fs::path const& archive, fs::path const& dst) const;
 		virtual bool store_variable(std::string const& name,
-		                            std::span<std::string const> call) = 0;
+		                            std::span<std::string const> call,
+		                            std::string& debug) = 0;
 		virtual bool mock(std::string const& exe, std::string const& link) = 0;
 		virtual bool generate(std::string const& tmplt,
 		                      std::string const& dst,

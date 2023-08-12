@@ -59,6 +59,7 @@ namespace io {
 		std::map<std::string, std::string> const* env{nullptr};
 		io::pipe pipe{pipe::none};
 		std::string_view input{};
+		std::string* debug{nullptr};
 	};
 	capture run(run_opts const& options);
 
@@ -67,13 +68,15 @@ namespace io {
 		args::arglist args{};
 		fs::path const* cwd{nullptr};
 		std::map<std::string, std::string> const* env{nullptr};
+		std::string* debug{nullptr};
 	};
 	inline int call(call_opts const& options) {
 		return run({.exec = options.exec,
 		            .args = options.args,
 		            .cwd = options.cwd,
 		            .env = options.env,
-		            .pipe = pipe::none})
+		            .pipe = pipe::none,
+		            .debug = options.debug})
 		    .return_code;
 	}
 

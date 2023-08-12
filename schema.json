@@ -8,7 +8,7 @@
         "linear": {"type": "boolean"},
         "disabled": {"enum": [true, false, "win32", "linux"]},
         "env": {
-            "type": "objects",
+            "type": "object",
             "properties": {
                 "^$": {"not": {}},
                 "^.+$": {"type": ["string", "null", "array"], "items": {"type": "string"}}

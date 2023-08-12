@@ -65,7 +65,8 @@ namespace testbed {
 
 		bool cd(fs::path const& dir) override;
 		bool store_variable(std::string const& name,
-		                    std::span<std::string const> call) override;
+		                    std::span<std::string const> call,
+		                    std::string& debug) override;
 		bool mock(std::string const& exe, std::string const& link) override;
 		bool generate(std::string const& tmplt,
 		              std::string const& dst,

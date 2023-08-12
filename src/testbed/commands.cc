@@ -212,7 +212,8 @@ namespace testbed {
 		          }}},
 		    {"unpack"s, {.min_args = 2, .handler = HANDLER(unpack(P0, P1))}},
 		    {"store"s,
-		     {.min_args = 2, .handler = HANDLER(store_variable(S0, A1))}},
+		     {.min_args = 2,
+		      .handler = HANDLER(store_variable(S0, A1, listing))}},
 		    {"mock"s, {.min_args = 2, .handler = HANDLER(mock(S0, S1))}},
 		    {"generate"s,
 		     {.min_args = 3,
@@ -232,7 +233,8 @@ namespace testbed {
 	}
 
 	bool test::store_variable(std::string const& var,
-	                          std::span<std::string const> call) {
+	                          std::span<std::string const> call,
+	                          std::string& debug) {
 		if (call.empty()) return false;
 		auto const& exec_str = call.front();
 		call = call.subspan(1);
@@ -242,11 +244,13 @@ namespace testbed {
 		auto proc = io::run({.exec = exec,
 		                     .args = copy.args(),
 		                     .cwd = &cwd(),
-		                     .pipe = io::pipe::output});
+		                     .pipe = io::pipe::output,
+		                     .debug = &debug});
 		if (proc.return_code != 0) return false;
 		auto output = trim(proc.output);
 		stored_env[var] = {output.data(), output.size()};
-		if (current_rt->debug) fmt::print("  {} {}\n", var, repr(proc.output));
+		if (current_rt->debug)
+			debug.append(fmt::format("  {} {}\n", var, repr(proc.output)));
 		return true;
 	}
 
