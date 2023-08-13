@@ -19,4 +19,4 @@ namespace cmake {
 	};
 
 	project const& get_project();
-}
+}  // namespace cmake

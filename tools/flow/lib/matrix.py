@@ -435,26 +435,6 @@ class steps:
         packages_dir = f"build/{preset}/packages"
         if not runner.DRY_RUN:
             os.makedirs("build/artifacts", exist_ok=True)
-        print_args(
-            "mv", package_name_(config, "apps", ".*"), package_name_(config, "", ".*")
-        )
-        if not runner.DRY_RUN:
-            comp_filename = package_name_(config, "apps", "")
-            main_filename = package_name_(config, "", "")
-            for _, dirnames, filenames in os.walk(packages_dir):
-                dirnames[:] = []
-                extensions = [
-                    filename[len(comp_filename) :]
-                    for filename in filenames
-                    if len(filename) > len(comp_filename)
-                    and filename[: len(comp_filename)] == comp_filename
-                    and filename[len(comp_filename)] == "."
-                ]
-            for extension in extensions:
-                shutil.move(
-                    f"{packages_dir}/{comp_filename}{extension}",
-                    f"{packages_dir}/{main_filename}{extension}",
-                )
 
         runner.copy(
             packages_dir,

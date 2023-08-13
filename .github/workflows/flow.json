@@ -1,15 +1,12 @@
 {
   "matrix": {
-    "compiler": ["gcc", "clang", "msvc"],
+    "compiler": ["gcc", "msvc"],
     "build_type": ["Release", "Debug"],
-    "sanitizer": [true, false],
     "os": ["ubuntu", "windows"]
   },
   "exclude": [
-    {"os": "windows", "compiler": "clang"},
     {"os": "windows", "compiler": "gcc"},
-    {"os": "ubuntu", "compiler": "msvc"},
-    {"build_type": "Release", "sanitizer": true}
+    {"os": "ubuntu", "compiler": "msvc"}
   ],
   "include": [
     {"build_type": "Debug", "preset": "debug", "coverage": true},
@@ -18,10 +15,10 @@
       "os": "ubuntu",
       "conan_settings": ["compiler.libcxx=libstdc++11"],
       "build_generator": "ninja",
-      "cpack_generator": ["TGZ", "DEB"],
+      "cpack_generator": ["TGZ"],
       "ubuntu": true,
       "home": "/home/runner",
-      "latest_conan_hash": "0dbd3bbacea7ac58e0064195451c86646e20419f302f8539956ab60fa4b0bcfd"
+      "latest_conan_hash": "055fd930320293a581d3dd23111330d8b10761a264dcf28c88935c19c4f05b97"
     },
     {
       "os": "windows",
@@ -31,13 +28,11 @@
       "cpack_generator": ["ZIP", "WIX"],
       "windows": true,
       "home": "C:/Users/runneradmin",
-      "latest_conan_hash": "586b1c2983ee7a95473708c44799b6027035f6df0503ed7dbcbcf3d3d847dd0e"
+      "latest_conan_hash": "aaa1f9c7e98b44562fb0b57939c97b1414083f8849ac5df5d529c9a3794d0be3"
     },
     {"os": "ubuntu", "report_os": "Linux"},
     {"compiler": "gcc", "report_compiler": "GNU", "gcc": true},
-    {"compiler": "clang", "report_compiler": "Clang", "clang": true},
     {"compiler": "msvc", "report_compiler": "MSVC", "msvc": true},
-    {"os": "ubuntu", "build_type": "Release", "sanitizer": false},
     {
       "os": "windows",
       "build_type": "Release",

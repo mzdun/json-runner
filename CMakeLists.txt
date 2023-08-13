@@ -203,3 +203,23 @@ if (WIN32)
     target_link_options(runner PRIVATE /ENTRY:wmainCRTStartup)
     fix_vs_modules(runner)
 endif()
+
+install(TARGETS runner
+    RUNTIME DESTINATION ${BINARY_DIR}
+    COMPONENT main_exec
+)
+
+cpack_add_component(main_exec
+    DISPLAY_NAME "Main executable"
+    GROUP apps
+)
+
+cpack_add_component(tools
+    DISPLAY_NAME "Core tools"
+    GROUP apps
+)
+
+cpack_add_component_group(apps
+    DISPLAY_NAME "Executables"
+    EXPANDED
+)
