@@ -18,7 +18,7 @@
       "os": "ubuntu",
       "conan_settings": ["compiler.libcxx=libstdc++11"],
       "build_generator": "ninja",
-      "cpack_generator": ["TGZ", "DEB"],
+      "cpack_generator": ["TGZ"],
       "ubuntu": true,
       "home": "/home/runner",
       "latest_conan_hash": "055fd930320293a581d3dd23111330d8b10761a264dcf28c88935c19c4f05b97"
