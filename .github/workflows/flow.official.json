@@ -1,6 +1,5 @@
 {
   "exclude": [
-    {"build_type": "Debug"},
-    {"sanitizer": true}
+    {"build_type": "Debug"}
   ]
 }

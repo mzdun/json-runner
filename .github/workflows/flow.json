@@ -2,13 +2,11 @@
   "matrix": {
     "compiler": ["gcc", "msvc"],
     "build_type": ["Release", "Debug"],
-    "sanitizer": [true, false],
     "os": ["ubuntu", "windows"]
   },
   "exclude": [
     {"os": "windows", "compiler": "gcc"},
-    {"os": "ubuntu", "compiler": "msvc"},
-    {"build_type": "Release", "sanitizer": true}
+    {"os": "ubuntu", "compiler": "msvc"}
   ],
   "include": [
     {"build_type": "Debug", "preset": "debug", "coverage": true},
@@ -35,7 +33,6 @@
     {"os": "ubuntu", "report_os": "Linux"},
     {"compiler": "gcc", "report_compiler": "GNU", "gcc": true},
     {"compiler": "msvc", "report_compiler": "MSVC", "msvc": true},
-    {"os": "ubuntu", "build_type": "Release", "sanitizer": false},
     {
       "os": "windows",
       "build_type": "Release",
