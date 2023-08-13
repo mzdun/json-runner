@@ -98,11 +98,6 @@ jobs:
       with:
         version: 1.57.0
 
-    - name: Configure Conan (deprecated)
-      run: |
-        conan remote add mbits-conan https://mbits.jfrog.io/artifactory/api/conan/mbits-conan
-        conan user -p ${{ secrets.JFROG_KEY }} -r mbits-conan ${{ secrets.JFROG_USER }}
-
     - name: Conan cache
       uses: actions/cache@v3
       id: cache
