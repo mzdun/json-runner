@@ -123,6 +123,7 @@ jobs:
 
     - name: Pack
       id: artifacts
+      if: ${{ fromJson(needs.M.outputs.RELEASE) }}
       run: ${{ env.FLOW_COMMAND }} -s Sign,Pack,SignPackages,StorePackages
       env:
         SIGN_TOKEN: ${{ secrets.SIGN_TOKEN }}
