@@ -1,1 +1,1 @@
-set(CPACK_PACKAGE_NAME JSON Runner)
+set(CPACK_PACKAGE_NAME "JSON Runner")
