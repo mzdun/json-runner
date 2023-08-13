@@ -162,28 +162,21 @@ group.add_argument(
     required=False,
     action="store_true",
     help=f'shortcut for "-c os={matrix.platform} '
-    f'compiler={default_compiler()} build_type=Debug sanitizer=OFF"',
+    f'compiler={default_compiler()} build_type=Debug"',
 )
 group.add_argument(
     "--rel",
     required=False,
     action="store_true",
     help=f'shortcut for "-c os={matrix.platform} '
-    f'compiler={default_compiler()} build_type=Release sanitizer=OFF"',
+    f'compiler={default_compiler()} build_type=Release"',
 )
 group.add_argument(
     "--both",
     required=False,
     action="store_true",
     help=f'shortcut for "-c os={matrix.platform} '
-    f'compiler={default_compiler()} build_type=Debug build_type=Release sanitizer=OFF"',
-)
-group.add_argument(
-    "--sane",
-    required=False,
-    action="store_true",
-    help=f'shortcut for "-c os={matrix.platform} '
-    f'compiler={default_compiler()} build_type=Debug sanitizer=ON"',
+    f'compiler={default_compiler()} build_type=Debug build_type=Release"',
 )
 parser.add_argument(
     "--cutdown-os",
@@ -243,7 +236,6 @@ parser.add_argument(
 
 def _turn(config: dict):
     config["github_os"] = f"{config['os']}-latest"
-    config["github_sanitizer"] = f"{'with' if config['sanitizer'] else 'no'}-sanitizer"
     return config
 
 
@@ -260,13 +252,12 @@ def main():
         parser.error("-s/--step and -S are mutually exclusive")
     if len(args.steps_plus):
         args.steps = _extend(args.steps_plus, args.steps)
-    if args.dev or args.rel or args.both or args.sane:
+    if args.dev or args.rel or args.both:
         args.configs.append(
             [
                 f"os={matrix.platform}",
                 f"compiler={default_compiler()}",
                 f"build_type={'Release' if args.rel else 'Debug'}",
-                f"sanitizer={'ON' if args.sane else 'OFF'}",
             ]
         )
         if args.both:

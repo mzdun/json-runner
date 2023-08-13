@@ -33,11 +33,11 @@ jobs:
     env:
       BUILD_TYPE: ${{ matrix.build_type }}
       CONAN_REVISIONS_ENABLED: 1
-      FLOW_COMMAND: python ./flow.py run --github --cutdown-os -c os=${{ matrix.os }} build_type=${{ matrix.build_type }} compiler=${{ matrix.compiler }} sanitizer=${{ matrix.sanitizer }}
+      FLOW_COMMAND: python ./flow.py run --github --cutdown-os -c os=${{ matrix.os }} build_type=${{ matrix.build_type }} compiler=${{ matrix.compiler }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     runs-on: ${{ matrix.github_os }}
-    name: ${{ matrix.build_type }} with ${{ matrix.compiler }} on ${{ matrix.os }}${{ matrix.sanitizer && ' (and sanitizer)' || '' }}
+    name: ${{ matrix.build_type }} with ${{ matrix.compiler }} on ${{ matrix.os }}
     outputs:
       RELEASE: ${{ fromJson(needs.M.outputs.RELEASE) }}
 
