@@ -113,9 +113,6 @@ jobs:
       uses: KungFuDonkey/Install-OpenCppCoverage@v1
       if: ${{ matrix.windows && matrix.build_type == 'Debug' }}
 
-    - name: Get latest archive from GitHub
-      run: python ./tools/download-latest.py
-
 #     ########  ########   #######        ## ########  ######  ########
 #     ##     ## ##     ## ##     ##       ## ##       ##    ##    ##
 #     ##     ## ##     ## ##     ##       ## ##       ##          ##
