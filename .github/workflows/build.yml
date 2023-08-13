@@ -75,12 +75,6 @@ jobs:
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-12 90
         sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-12 90
 
-    - name: Set up Clang
-      if: ${{ matrix.clang }}
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: 15
-
     - name: Check C++ binary
       if: ${{ matrix.ubuntu }}
       run: |
