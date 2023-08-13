@@ -20,6 +20,8 @@ namespace io {
 	namespace {
 		using namespace std::literals;
 
+		enum class pipe { output, error, input };
+
 		void append(std::wstring& ws, wchar_t next) { ws.push_back(next); }
 
 		template <size_t Length>
@@ -175,11 +177,22 @@ namespace io {
 			void close_read() { close_side(read); }
 			void close_write() { close_side(write); }
 
-			bool open_pipe(SECURITY_ATTRIBUTES* attrs) {
-				return CreatePipe(&read, &write, attrs, 0);
+			bool open_pipe(SECURITY_ATTRIBUTES* attrs, std::string& debug) {
+				auto const ret = CreatePipe(&read, &write, attrs, 0);
+				if (!ret) {
+					debug.append(
+					    fmt::format("open_pipe: error {:x}\n", GetLastError()));
+					return false;
+				} else {
+					debug.append(fmt::format("open_pipe -> read:{} write:{}\n",
+					                         read, write));
+				}
+				return ret;
 			}
 
-			bool open_std(pipe direction, SECURITY_ATTRIBUTES* attrs) {
+			bool open_std(pipe direction,
+			              SECURITY_ATTRIBUTES* attrs,
+			              std::string& debug) {
 				auto handle = GetStdHandle(
 				    direction == pipe::input    ? STD_INPUT_HANDLE
 				    : direction == pipe::output ? STD_OUTPUT_HANDLE
@@ -197,16 +210,71 @@ namespace io {
 					return true;
 				}
 
-				return open_pipe(attrs);
+				return open_pipe(attrs, debug);
 			}
 
-			bool open(pipe all_directions,
-			          pipe this_direction,
-			          SECURITY_ATTRIBUTES* attrs) {
-				if ((all_directions & this_direction) == this_direction) {
-					return open_pipe(attrs);
+			bool open_devnull(SECURITY_ATTRIBUTES* attrs, std::string& debug) {
+				write = ::CreateFileW(L"nul", GENERIC_READ | GENERIC_WRITE,
+				                      FILE_SHARE_READ | FILE_SHARE_WRITE, attrs,
+				                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+				                      nullptr);
+				debug.append(fmt::format("open_devnull -> fd:{}\n", write));
+				return true;
+			}
+
+			bool open(std::optional<std::string_view> const& input,
+			          pipe,
+			          SECURITY_ATTRIBUTES* attrs,
+			          std::string& debug) {
+				if (!input) return true;
+				debug.append("input: ");
+				return open_pipe(attrs, debug);
+			}
+
+			bool open(stream_decl const& decl,
+			          pipe direction,
+			          SECURITY_ATTRIBUTES* attrs,
+			          std::string& debug) {
+				switch (direction) {
+					case pipe::input:
+						debug.append("input?!?");
+						break;
+					case pipe::output:
+						debug.append("output");
+						break;
+					case pipe::error:
+						debug.append("error");
+						break;
 				}
-				return open_std(this_direction, attrs);
+				debug.append(": ");
+				if (decl == nullptr) debug.append("nothing: ");
+				if (decl == piped{}) debug.append("piped: ");
+				if (decl == devnull{}) debug.append("/dev/null: ");
+				if (decl == redir_to_output{}) debug.append(">&1: ");
+				if (decl == redir_to_error{}) debug.append(">&2: ");
+				if (decl == terminal{}) debug.append("pty: ");
+
+				if (decl == piped{}) return open_pipe(attrs, debug);
+				if (decl == terminal{}) return open_pipe(attrs, debug);
+				if (decl == devnull{}) return open_devnull(attrs, debug);
+
+				if (decl == redir_to_output{}) {
+					debug.append(fmt::format(
+					    "{} to output, {}\n",
+					    direction == pipe::error ? "error"sv : "output"sv,
+					    direction == pipe::error ? "ok"sv : "will fail"sv));
+					return direction == pipe::error;
+				}
+				if (decl == redir_to_error{}) {
+					debug.append(fmt::format(
+					    "{} to error, {}\n",
+					    direction == pipe::output ? "output"sv : "error"sv,
+					    direction == pipe::output ? "ok"sv : "will fail"sv));
+					return direction == pipe::output;
+				}
+
+				debug.append("<true>\n");
+				return true;
 			}
 
 			static constexpr DWORD BUFSIZE = 16384u;
@@ -283,17 +351,17 @@ namespace io {
 			win32_pipe output{};
 			win32_pipe error{};
 
-			bool open(pipe directions) {
+			bool open(run_opts const& opts, std::string& debug) {
 				SECURITY_ATTRIBUTES saAttr{
 				    .nLength = sizeof(SECURITY_ATTRIBUTES),
 				    .lpSecurityDescriptor = nullptr,
 				    .bInheritHandle = TRUE,
 				};
 
-#define OPEN(DIRECTION)                                          \
-	if (!DIRECTION.open(directions, pipe::DIRECTION, &saAttr)) { \
-		[[unlikely]];                                            \
-		return false;                                            \
+#define OPEN(DIRECTION)                                                     \
+	if (!DIRECTION.open(opts.DIRECTION, pipe::DIRECTION, &saAttr, debug)) { \
+		[[unlikely]];                                                       \
+		return false;                                                       \
 	}
 
 				OPEN(input);
@@ -302,9 +370,8 @@ namespace io {
 				return true;
 			}
 
-			void io(std::string_view input_data,
-			        capture& output_data,
-			        pipe directions) {
+			std::string io(std::optional<std::string_view> const& input_data,
+			               capture& output_data) {
 				input.close_read();
 				output.close_write();
 				error.close_write();
@@ -316,22 +383,25 @@ namespace io {
 
 				std::vector<std::thread> threads{};
 				threads.reserve(
-				    ((directions & pipe::input) == pipe::input ? 1u : 0u) +
-				    ((directions & pipe::output) == pipe::output ? 1u : 0u) +
-				    ((directions & pipe::error) == pipe::error ? 1u : 0u));
+				    (input.write != nullptr && input_data ? 1u : 0u) +
+				    (output.read != nullptr ? 1u : 0u) +
+				    (error.read != nullptr ? 1u : 0u));
 
-				if ((directions & pipe::input) == pipe::input)
-					threads.push_back(input.async_write(input_data));
+				if (input.write != nullptr && input_data)
+					threads.push_back(input.async_write(*input_data));
 
-				if ((directions & pipe::output) == pipe::output)
+				if (output.read != nullptr)
 					threads.push_back(output.async_read(output_data.output));
 
-				if ((directions & pipe::error) == pipe::error)
+				if (error.read != nullptr)
 					threads.push_back(error.async_read(output_data.error));
 
 				for (auto& thread : threads) {
 					thread.join();
 				}
+
+				std::string result;
+				return result;
 			}
 		};
 
@@ -535,6 +605,7 @@ namespace io {
 			return result;
 		}
 
+		std::string debug{};
 		win32_pipes pipes{};
 		win32_handle_attributes attrs{};
 		STARTUPINFOEXW si;
@@ -542,13 +613,13 @@ namespace io {
 
 		ZeroMemory(&si, sizeof(si));
 
-		if (!pipes.open(options.pipe)) {
+		if (!pipes.open(options, debug)) {
 			// GCOV_EXCL_START
 			[[unlikely]];
+			debug.append("pipes did not open\n");
 			result.return_code = 128;
 			return result;
-			// GCOV_EXCL_STOP
-		}  // GCOV_EXCL_LINE
+		}  // GCOV_EXCL_STOP
 
 		si.StartupInfo.cb = sizeof(si);
 
@@ -601,7 +672,7 @@ namespace io {
 			// GCOV_EXCL_STOP[WIN32]
 		}  // GCOV_EXCL_LINE
 
-		pipes.io(options.input, result, options.pipe);
+		debug.append(pipes.io(options.input, result));
 
 		DWORD return_code{};
 		WaitForSingleObject(pi.hProcess, INFINITE);
