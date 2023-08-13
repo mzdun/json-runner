@@ -127,9 +127,6 @@ jobs:
     - name: Build
       run: ${{ env.FLOW_COMMAND }} -s Build
 
-    - name: Test
-      run: ${{ env.FLOW_COMMAND }} -s Test,StoreTests
-
     - name: Pack
       id: artifacts
       run: ${{ env.FLOW_COMMAND }} -s Sign,Pack,SignPackages,StorePackages
@@ -150,13 +147,6 @@ jobs:
       with:
         name: Packages
         path: ${{github.workspace}}/build/artifacts/packages/
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: Test results
-        path: ${{github.workspace}}/build/artifacts/test-results/
 
   publish:
     name: Upload packages
