@@ -209,6 +209,12 @@ install(TARGETS runner
     COMPONENT main_exec
 )
 
+install(
+    FILES ${PROJECT_SOURCE_DIR}/schema.json
+    DESTINATION share/runner-${PROJECT_VERSION_SHORT}
+    COMPONENT main_exec
+)
+
 cpack_add_component(main_exec
     DISPLAY_NAME "Main executable"
     GROUP apps
