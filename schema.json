@@ -4,7 +4,7 @@
     "required": ["args", "expected"],
     "properties": {
         "$schema": {"type": "string"},
-        "lang": {"type": "boolean"},
+        "lang": {"type": "string"},
         "linear": {"type": "boolean"},
         "disabled": {"enum": [true, false, "win32", "linux"]},
         "env": {
