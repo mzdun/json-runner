@@ -16,7 +16,7 @@ from github.api import API, format_release
 from github.changelog import FORCED_LEVEL, LEVEL_STABILITY, LEVEL_BENIGN, update_changelog
 from github.cmake import get_version, set_version
 from github.git import add_files, annotated_tag, bump_version, commit, get_log, get_tags
-from github.runner import Environment, print_args
+from github.runner import Environment, print_args, checked
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GITHUB_ORG = "mzdun"
@@ -92,7 +92,7 @@ def _hash(filename: str) -> str:
 
 
 def _checksums(archive: str, names: List[str], out_name: str):
-    print_args(["sha256sum", "-b"])
+    print_args(["sha256sum", "-b", *names, out_name])
     if True or not Environment.DRY_RUN:
         with open(os.path.join(archive, out_name), "w") as output:
             for name in names:
@@ -138,6 +138,9 @@ def upload(archive: str):
             print(f"would upload:", file=sys.stderr)
         for name in names:
             print(f"- {name}", file=sys.stderr)
+    else:
+        print(f"Could not find unpublished release... (looking for tag_name={project.tag()})", file=sys.stderr)
+        checked("gh", "auth", "status")
 
 
 parser = argparse.ArgumentParser(description="Creates a release draft in GitHub")
