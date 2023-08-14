@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.1.1](https://github.com/mzdun/runner/compare/v0.1.0...v0.1.1) (2023-08-14)
+
+### Bug Fixes
+
+- lang is string (#3) ([b0bcb4f](https://github.com/mzdun/runner/commit/b0bcb4ff5d710bfe444f15c0415438860762d608))
+
 ## [0.1.0](https://github.com/mzdun/runner/compare/v0.0.0...v0.1.0) (2023-08-14)
 
 ### New Features
