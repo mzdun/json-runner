@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.1.2](https://github.com/mzdun/runner/compare/v0.1.1...v0.1.2) (2023-08-14)
+
+### Bug Fixes
+
+- install current JSON schema alongside runner (#4) ([d6b136c](https://github.com/mzdun/runner/commit/d6b136c119ed766577b85f43eda793f1710554ac))
+
 ## [0.1.1](https://github.com/mzdun/runner/compare/v0.1.0...v0.1.1) (2023-08-14)
 
 ### Bug Fixes
