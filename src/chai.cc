@@ -222,10 +222,11 @@ struct Chai::Impl {
 			auto const install_name = project.target + "_install";
 			auto const proxy = fmt::format(
 			    "fun(copy_dir, rt) {{ {}(copy_dir, rt); }}", install_name);
-			auto installer = chai.eval<std::function<void(
-			    std::string const&, testbed::runtime const&)>>(proxy);
+			auto installer = chai.eval<
+			    std::function<void(std::string const&, testbed::runtime&)>>(
+			    proxy);
 			project.installer = [installer](std::string const& copy_dir,
-			                                testbed::runtime const& rt) {
+			                                testbed::runtime& rt) {
 				try {
 					installer(copy_dir, rt);
 				} catch (chaiscript::exception::eval_error const& ee) {

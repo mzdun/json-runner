@@ -94,6 +94,7 @@
         "numbers": "cpp",
         "cerrno": "cpp",
         "cwctype": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "source_location": "cpp"
     }
 }

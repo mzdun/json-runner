@@ -590,9 +590,13 @@ namespace testbed {
 		auto const env = copy_environment_block({}, rt);
 		auto const expanded = rt.expand(call_args, stored_env, exp::preferred);
 		std::vector<std::string> ran_cmd{};
-		ran_cmd.reserve(env.size() + 1 + expanded.link_stg.size());
+		ran_cmd.reserve(env.size() + rt.reportable_vars.size() + 1 +
+		                expanded.link_stg.size());
 		for (auto const& [var, value] : env) {
 			ran_cmd.push_back(fmt::format("{}={}", var, value));
+		}
+		for (auto const& var : rt.reportable_vars) {
+			ran_cmd.push_back(fmt::format("{}={}", var, shell::getenv(var)));
 		}
 		ran_cmd.push_back(shell::get_generic_path(rt.rt_target));
 		for (auto const& arg : expanded.stg) {

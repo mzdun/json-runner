@@ -18,8 +18,8 @@ namespace shell {
 	std::string quote(std::string_view arg);
 
 	template <typename T>
-	concept StringLike =
-	    (std::same_as<T, std::string> || std::same_as<T, std::string_view>);
+	concept StringLike = (std::same_as<T, std::string> ||
+	                      std::same_as<T, std::string_view>);
 
 	template <StringLike Arg>
 	std::string join(std::span<Arg const> args) {
@@ -53,6 +53,7 @@ namespace shell {
 	             std::string const& var,
 	             fs::path const& dir);
 	void putenv(std::string const& name, std::string const& var);
+	std::string getenv(std::string const& name);
 
 	inline fs::path make_u8path(std::string_view u8) {
 		return std::u8string_view{reinterpret_cast<char8_t const*>(u8.data()),
