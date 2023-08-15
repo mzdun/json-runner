@@ -531,7 +531,11 @@ namespace testbed {
 				*stream.actual =
 				    stream.actual->substr(0, stream.expected->size());
 			} else {
-				*stream.actual = stream.actual->substr(stream.expected->size());
+				auto const index =
+				    stream.expected->size() > stream.actual->size()
+				        ? 0
+				        : stream.actual->size() - stream.expected->size();
+				*stream.actual = stream.actual->substr(index);
 			}
 		}
 
