@@ -331,7 +331,7 @@ int tool(::args::args_view const& args) {
 	fs::path test_dir, copy_dir, binary_dir, test_set_dir;
 	std::vector<size_t> run;
 	std::string CMAKE_BUILD_TYPE;
-	bool debug{false}, nullify{false};
+	bool debug{false}, nullify{false}, keep_dirs{false};
 	std::optional<std::string> lang{};
 	std::optional<std::string> schema{};
 	{
@@ -371,6 +371,9 @@ int tool(::args::args_view const& args) {
 		    .meta("ID")
 		    .opt()
 		    .help("change language for nullified tests");
+		p.set<std::true_type>(keep_dirs, "keep-dirs")
+		    .opt()
+		    .help("keep directories created during this run");
 		p.arg(schema, "schema")
 		    .meta("URL")
 		    .opt()
@@ -529,8 +532,12 @@ int tool(::args::args_view const& args) {
 			counters.report(results.result, results.task_ident,
 			                results.report ? *results.report : ""sv,
 			                results.prepare, rt.debug);
-			std::error_code ignore{};
-			fs::remove_all(results.temp_dir, ignore);
+			if (!keep_dirs) {
+				std::error_code ignore{};
+				fs::remove_all(results.temp_dir, ignore);
+			} else {
+				fmt::print("keeping {}\n", shell::get_u8path(results.temp_dir));
+			}
 		}
 	}
 
@@ -543,8 +550,12 @@ int tool(::args::args_view const& args) {
 		counters.report(results.result, results.task_ident,
 		                results.report ? *results.report : ""sv,
 		                results.prepare, rt.debug);
-		std::error_code ignore{};
-		fs::remove_all(results.temp_dir, ignore);
+		if (!keep_dirs) {
+			std::error_code ignore{};
+			fs::remove_all(results.temp_dir, ignore);
+		} else {
+			fmt::print("keeping {}\n", shell::get_u8path(results.temp_dir));
+		}
 	}
 
 	if (!counters.summary(tests.size())) return 1;
