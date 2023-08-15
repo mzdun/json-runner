@@ -53,7 +53,7 @@ std::error_code install(
     std::string const& CMAKE_BUILD_TYPE,
     testbed::runtime& rt,
     std::vector<std::string> const& components,
-    std::function<void(std::string const&, testbed::runtime const&)> const&
+    std::function<void(std::string const&, testbed::runtime&)> const&
         additional_install) {
 	std::error_code ec{};
 

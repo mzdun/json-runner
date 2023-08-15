@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <set>
 #include "testbed/commands.hh"
 
 namespace testbed {
@@ -17,6 +18,7 @@ namespace testbed {
 		size_t counter_total{};
 		size_t counter_digits{counter_width(counter_total)};
 		std::map<std::string, handler_info> handlers;
+		std::set<std::string> reportable_vars{};
 		std::map<std::string, std::string>* variables;
 		std::map<std::string, std::string> const* chai_variables;
 		std::map<std::string, std::string> const* common_patches;

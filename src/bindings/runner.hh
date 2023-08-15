@@ -40,18 +40,20 @@ namespace chaiscript::runner {
 		using namespace chaiscript;
 
 		m.add(user_type<testbed::runtime>(), "runtime");
-		m.add(fun([](testbed::runtime const& rt, std::string const& name,
+		m.add(fun([](testbed::runtime& rt, std::string const& name,
 		             std::string const& path) -> void {
 			      auto& variables = *rt.variables;
 			      shell::append(variables, name, path);
 			      shell::putenv(name, variables[name]);
+			      rt.reportable_vars.insert(name);
 		      }),
 		      "append");
-		m.add(fun([](testbed::runtime const& rt, std::string const& name,
+		m.add(fun([](testbed::runtime& rt, std::string const& name,
 		             std::string const& path) -> void {
 			      auto& variables = *rt.variables;
 			      shell::prepend(variables, name, path);
 			      shell::putenv(name, variables[name]);
+			      rt.reportable_vars.insert(name);
 		      }),
 		      "prepend");
 #define RT_PATH(NAME)                          \

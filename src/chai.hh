@@ -33,8 +33,7 @@ public:
 		std::map<std::string, std::string> environment;
 		std::map<std::string, std::string> common_patches;
 		std::map<std::string, testbed::handler_info> script_handlers;
-		std::function<void(std::string const&, testbed::runtime const&)>
-		    installer;
+		std::function<void(std::string const&, testbed::runtime&)> installer;
 
 		std::map<std::string, testbed::handler_info> handlers() const;
 	};

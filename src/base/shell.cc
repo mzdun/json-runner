@@ -251,11 +251,23 @@ namespace shell {
 		SetEnvironmentVariableW(from_utf8(name).c_str(),
 		                        from_utf8(var).c_str());
 	}
+	std::string getenv(std::string const& name) {
+		auto size =
+		    GetEnvironmentVariableW(from_utf8(name).c_str(), nullptr, 0);
+		if (!size) return {};
+		std::vector<wchar_t> buffer(size);
+		auto written = GetEnvironmentVariableW(from_utf8(name).c_str(),
+		                                       buffer.data(), size);
+		return to_utf8({buffer.data(), written});
+	}
 #endif
 
 #ifdef __linux__
 	void putenv(std::string const& name, std::string const& var) {
 		setenv(name.c_str(), var.c_str(), 1);
+	}
+	std::string getenv(std::string const& name) {
+		return ::getenv(name.c_str());
 	}
 #endif
 }  // namespace shell
