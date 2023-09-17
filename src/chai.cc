@@ -64,6 +64,29 @@ namespace {
 		}
 		return proc.return_code == 0;
 	}
+
+	void git_config(std::string&& name, std::string&& value) {
+		io::args_storage stg{
+		    .stg{"config"s, "--global"s, std::move(name), std::move(value)}};
+		io::run({.exec = "git"sv,
+		         .args = stg.args(),
+		         .output = io::devnull{},
+		         .error = io::devnull{}});
+	}
+
+	void config_git() {
+		io::args_storage stg{.stg{"config"s, "--global"s, "user-name"s}};
+
+		auto proc = io::run({.exec = "git"sv,
+		                     .args = stg.args(),
+		                     .output = io::piped{},
+		                     .error = io::devnull{}});
+		if (!proc.output.empty()) return;
+
+		git_config("user.email"s, "test_runner@example.com"s);
+		git_config("user.name"s, "Test Runner"s);
+		git_config("init.defaultBranch"s, "main"s);
+	}
 }  // namespace
 
 struct Project {
@@ -240,6 +263,10 @@ std::map<std::string, testbed::handler_info> Chai::ProjectInfo::handlers()
 			        return run_tool(app, args, self.cwd(), listing);
 		        },
 		};
+
+		if (app == "git"sv) {
+			config_git();
+		}
 	}
 
 	for (auto const& [key, handler] : script_handlers) {
