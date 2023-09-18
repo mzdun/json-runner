@@ -23,6 +23,7 @@
 #include "chai.hh"
 #include "io/presets.hh"
 #include "testbed/test.hh"
+#include "version.hh"
 
 using namespace std::literals;
 
@@ -318,12 +319,16 @@ std::packaged_task<test_results()> package_test(
 }
 
 int tool(::args::args_view const& args) {
+#if 0
+	{
+		std::string dummy;
+		fmt::print("Press enter when profiler's ready: ");
+		std::getline(std::cin, dummy);
+	}
+#endif
 	Chai chai;
-	auto const info = chai.project();
-	auto test_dir = fs::weakly_canonical(info.datasets_dir);
-	auto copy_dir = fs::weakly_canonical(u8"build/.json-runner"sv);
-
-	fs::path binary_dir, test_set_dir;
+	Chai::ProjectInfo info{};
+	fs::path test_dir, copy_dir, binary_dir, test_set_dir;
 	std::vector<size_t> run;
 	std::string CMAKE_BUILD_TYPE;
 	bool debug{false}, nullify{false};
@@ -335,14 +340,46 @@ int tool(::args::args_view const& args) {
 
 		::args::null_translator tr{};
 		::args::parser p{{}, args, &tr};
-		p.arg(preset, "preset").meta("CONFIG");
-		p.arg(tests, "tests").meta("DIR");
-		p.arg(run, "run").meta("ID").opt();
-		p.set<std::true_type>(debug, "debug").opt();
-		p.set<std::true_type>(nullify, "nullify").opt();
-		p.arg(lang, "lang").meta("ID").opt();
-		p.arg(schema, "schema").meta("URL").opt();
+		p.custom(
+		     [&] {
+			     fmt::print("{} version {}{}", p.program(), version::string,
+			                version::stability);
+			     if (!version::build_meta.empty())
+				     fmt::print(" ({})", version::build_meta);
+			     fmt::print("\n");
+			     std::exit(0);
+		     },
+		     "version")
+		    .opt()
+		    .help("show version information and exit");
+		p.arg(preset, "preset")
+		    .meta("CONFIG")
+		    .help("set name of CMake build preset");
+		p.arg(tests, "tests")
+		    .meta("DIR")
+		    .help(
+		        "point to directory with the JSON test cases; "
+		        "test cases are enumerated recursively");
+		p.arg(run, "run").meta("ID").opt().help("filter the tests to run");
+		p.set<std::true_type>(debug, "debug")
+		    .opt()
+		    .help("print output even for successful tests");
+		p.set<std::true_type>(nullify, "nullify")
+		    .opt()
+		    .help("set the \"expected\" field of the test cases to null");
+		p.arg(lang, "lang")
+		    .meta("ID")
+		    .opt()
+		    .help("change language for nullified tests");
+		p.arg(schema, "schema")
+		    .meta("URL")
+		    .opt()
+		    .help("update the \"$schema\" in files");
 		p.parse();
+
+		info = chai.project();
+		auto test_dir = fs::weakly_canonical(info.datasets_dir);
+		auto copy_dir = fs::weakly_canonical(u8"build/.json-runner"sv);
 
 		auto const presets =
 		    io::cmake::preset::load_file(u8"CMakePresets.json"sv);

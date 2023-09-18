@@ -185,9 +185,10 @@ endif()
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
+configure_file(src/version.hh.in ${CMAKE_CURRENT_BINARY_DIR}/src/version.hh @ONLY)
 
 add_executable(runner ${SOURCES})
-target_include_directories(runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 target_link_libraries(runner PRIVATE
     ctre::ctre

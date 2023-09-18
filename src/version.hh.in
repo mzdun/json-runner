@@ -1,0 +1,25 @@
+// Copyright (c) 2023 Marcin Zdun
+// This code is licensed under MIT license (see LICENSE for details)
+
+// @PROJECT_NAME@ @PROJECT_VERSION@@PROJECT_VERSION_STABILITY@
+
+#pragma once
+#line 8 "src/version.hh.in"
+
+#include <string_view>
+
+// clang-format off
+namespace version {
+	using std::literals::operator ""sv;
+
+	static constexpr auto string = "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"sv;  // NOLINT build/include_what_you_use and whitespace/line_length
+	static constexpr auto string_short = "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@"sv;
+	static constexpr auto stability = "@PROJECT_VERSION_STABILITY@"sv;  // or "-alpha.5", "-beta", "-rc.3", "", ...
+	static constexpr auto build_meta = "@PROJECT_VERSION_BUILD_META@"sv;
+	static constexpr auto ui = "@PROJECT_VERSION@@PROJECT_VERSION_STABILITY@@PROJECT_VERSION_BUILD_META@"sv;
+
+	static constexpr unsigned major = @PROJECT_VERSION_MAJOR@;
+	static constexpr unsigned minor = @PROJECT_VERSION_MINOR@;
+	static constexpr unsigned patch = @PROJECT_VERSION_PATCH@;
+}  // namespace version
+// clang-format on

@@ -39,7 +39,7 @@ public:
 		std::map<std::string, testbed::handler_info> handlers() const;
 	};
 
-	ProjectInfo const& project() const noexcept;
+	ProjectInfo const& project() noexcept;
 
 private:
 	struct Impl;

@@ -243,9 +243,10 @@ struct Chai::Impl {
 	}
 };
 
-Chai::Chai() : pimpl{std::make_unique<Chai::Impl>()} {}
+Chai::Chai() = default;
 Chai::~Chai() = default;
-Chai::ProjectInfo const& Chai::project() const noexcept {
+Chai::ProjectInfo const& Chai::project() noexcept {
+	if (!pimpl) pimpl = std::make_unique<Chai::Impl>();
 	return pimpl->project;
 }
 
