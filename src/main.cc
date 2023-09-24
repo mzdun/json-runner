@@ -378,8 +378,8 @@ int tool(::args::args_view const& args) {
 		p.parse();
 
 		info = chai.project();
-		auto test_dir = fs::weakly_canonical(info.datasets_dir);
-		auto copy_dir = fs::weakly_canonical(u8"build/.json-runner"sv);
+		test_dir = fs::weakly_canonical(info.datasets_dir);
+		copy_dir = fs::weakly_canonical(u8"build/.json-runner"sv);
 
 		auto const presets =
 		    io::cmake::preset::load_file(u8"CMakePresets.json"sv);
@@ -460,17 +460,17 @@ int tool(::args::args_view const& args) {
 	}
 
 	auto variables = shell::get_env();
-	testbed::runtime rt{
-	    .target{target},
-	    .build_dir = binary_dir,
-	    .temp_dir = fs::temp_directory_path() / "json-test-runner",
-	    .version = cmake::get_project().ver(),
-	    .counter_total = unfiltered_count,
-	    .handlers = info.handlers(),
-	    .variables = &variables,
-	    .chai_variables = &info.environment,
-	    .common_patches = &info.common_patches,
-	    .debug = debug};
+	testbed::runtime rt{.target{target},
+	                    .build_dir = binary_dir,
+	                    .temp_dir = fs::canonical(fs::temp_directory_path()) /
+	                                "json-test-runner",
+	                    .version = cmake::get_project().ver(),
+	                    .counter_total = unfiltered_count,
+	                    .handlers = info.handlers(),
+	                    .variables = &variables,
+	                    .chai_variables = &info.environment,
+	                    .common_patches = &info.common_patches,
+	                    .debug = debug};
 	auto ec = install(copy_dir, binary_dir, CMAKE_BUILD_TYPE, rt,
 	                  info.install_components, info.installer);
 	if (ec) {

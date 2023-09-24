@@ -10,7 +10,15 @@
 
 // clang-format off
 namespace version {
+#ifdef _MSC_VER
+// literal suffix identifiers that do not start with an underscore are reserved
+#pragma warning(push)
+#pragma warning(disable: 4455)
+#endif
 	using std::literals::operator ""sv;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 	static constexpr auto string = "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"sv;  // NOLINT build/include_what_you_use and whitespace/line_length
 	static constexpr auto string_short = "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@"sv;
