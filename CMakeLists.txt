@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.25)
-project (runner
+project (json-runner
   DESCRIPTION "JSON test orchestration"
   VERSION 0.1.3
   LANGUAGES CXX
@@ -187,10 +187,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
 configure_file(src/version.hh.in ${CMAKE_CURRENT_BINARY_DIR}/src/version.hh @ONLY)
 
-add_executable(runner ${SOURCES})
-target_include_directories(runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
+add_executable(json-runner ${SOURCES})
+target_include_directories(json-runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 
-target_link_libraries(runner PRIVATE
+target_link_libraries(json-runner PRIVATE
     ctre::ctre
     fmt::fmt
     mbits::args
@@ -200,19 +200,19 @@ target_link_libraries(runner PRIVATE
 )
 
 if (WIN32)
-    target_compile_options(runner PUBLIC /D_UNICODE /DUNICODE)
-    target_link_options(runner PRIVATE /ENTRY:wmainCRTStartup)
-    fix_vs_modules(runner)
+    target_compile_options(json-runner PUBLIC /D_UNICODE /DUNICODE)
+    target_link_options(json-runner PRIVATE /ENTRY:wmainCRTStartup)
+    fix_vs_modules(json-runner)
 endif()
 
-install(TARGETS runner
+install(TARGETS json-runner
     RUNTIME DESTINATION ${BINARY_DIR}
     COMPONENT main_exec
 )
 
 install(
     FILES ${PROJECT_SOURCE_DIR}/schema.json
-    DESTINATION share/runner-${PROJECT_VERSION_SHORT}
+    DESTINATION share/json-runner-${PROJECT_VERSION_SHORT}
     COMPONENT main_exec
 )
 

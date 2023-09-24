@@ -439,7 +439,7 @@ class steps:
         runner.copy(
             packages_dir,
             "build/artifacts/packages",
-            r"^runner-.*$",
+            r"^json-runner-.*$",
         )
 
         if runner.GITHUB_ANNOTATE:
