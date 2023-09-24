@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.2.0](https://github.com/mzdun/json-runner/compare/v0.1.3...v0.2.0) (2023-09-24)
+
+### New Features
+
+- rename the project ([fd3eca5](https://github.com/mzdun/json-runner/commit/fd3eca5f7a7b3fb799ce12d59dd17eae8d5bed20))
+
+### Bug Fixes
+
+- apply small path bug fixes ([923f55e](https://github.com/mzdun/json-runner/commit/923f55e864ba15fa63ea5ae5dba48f5dfec2fe37))
+- add --version, allow --help to work ([90cf92a](https://github.com/mzdun/json-runner/commit/90cf92ae137d2e39ac0394653dd2127379e8b6ca))
+
 ## [0.1.3](https://github.com/mzdun/runner/compare/v0.1.2...v0.1.3) (2023-09-17)
 
 ### Bug Fixes
