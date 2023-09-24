@@ -18,8 +18,8 @@ namespace shell {
 	std::string quote(std::string_view arg);
 
 	template <typename T>
-	concept StringLike = (std::same_as<T, std::string> ||
-	                      std::same_as<T, std::string_view>);
+	concept StringLike =
+	    (std::same_as<T, std::string> || std::same_as<T, std::string_view>);
 
 	template <StringLike Arg>
 	std::string join(std::span<Arg const> args) {
