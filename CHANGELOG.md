@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.2.1](https://github.com/mzdun/json-runner/compare/v0.2.0...v0.2.1) (2023-09-24)
+
+### Bug Fixes
+
+- revert style issue ([5c80b89](https://github.com/mzdun/json-runner/commit/5c80b892718e13e37749789bb3885047a1109cee))
+- properly clip at the "end" ([8fcc866](https://github.com/mzdun/json-runner/commit/8fcc866148e44bc91cb42ddfc97abc7951f01292))
+- keep test dirs on demand ([9b9707d](https://github.com/mzdun/json-runner/commit/9b9707de95bcb30e969bfc2c68142c44784dd4b7))
+- print env vars from Chai script ([1bc9b0c](https://github.com/mzdun/json-runner/commit/1bc9b0cad61d38f66df1b88d16027454e56bd9d4))
+
 ## [0.2.0](https://github.com/mzdun/json-runner/compare/v0.1.3...v0.2.0) (2023-09-24)
 
 ### New Features
