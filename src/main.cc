@@ -220,10 +220,10 @@ bool counters::summary(size_t counter) const {
 	if (skip_ != 0) {
 		auto const test_s = skip_ == 1 ? "test"sv : "tests"sv;
 		if (save_ != 0) {
-			fmt::print("Skipped {} {} (including {} due to saving)", skip_,
+			fmt::print("Skipped {} {} (including {} due to saving)\n", skip_,
 			           test_s, save_);
 		} else {
-			fmt::print("Skipped {} {}", skip_, test_s);
+			fmt::print("Skipped {} {}\n", skip_, test_s);
 		}
 	}
 
