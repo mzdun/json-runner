@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.2.2](https://github.com/mzdun/json-runner/compare/v0.2.1...v0.2.2) (2024-04-15)
+
+### Bug Fixes
+
+- git config user.name ([79355c6](https://github.com/mzdun/json-runner/commit/79355c660a8dcca545d81f1a14d5f1e341c992a3))
+
 ## [0.2.1](https://github.com/mzdun/json-runner/compare/v0.2.0...v0.2.1) (2023-09-24)
 
 ### Bug Fixes
