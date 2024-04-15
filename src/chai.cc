@@ -75,7 +75,7 @@ namespace {
 	}
 
 	void config_git() {
-		io::args_storage stg{.stg{"config"s, "--global"s, "user-name"s}};
+		io::args_storage stg{.stg{"config"s, "--global"s, "user.name"s}};
 
 		auto proc = io::run({.exec = "git"sv,
 		                     .args = stg.args(),

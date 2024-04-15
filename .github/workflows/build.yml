@@ -63,17 +63,24 @@ jobs:
     - name: Install GCC 12 & Ninja
       if: ${{ matrix.ubuntu }}
       run: |
-        sudo apt-get remove g++-11 -y
         sudo apt-get install ninja-build -y
 
     - name: Set up GCC
       if: ${{ matrix.ubuntu && matrix.gcc }}
       run: |
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 90
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90
-        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-12 90
-        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-12 90
-        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-12 90
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 90
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 90
+        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-13 90
+
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-13 90
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-13 90
+
+        sudo update-alternatives --set g++ /usr/bin/g++-13
+        sudo update-alternatives --set gcc /usr/bin/gcc-13
+        sudo update-alternatives --set gcov /usr/bin/gcov-13
+
+        sudo update-alternatives --set c++ /usr/bin/g++-13
+        sudo update-alternatives --set cc /usr/bin/gcc-13
 
     - name: Check C++ binary
       if: ${{ matrix.ubuntu }}
@@ -90,7 +97,7 @@ jobs:
       id: conan
       uses: turtlebrowser/get-conan@main
       with:
-        version: 1.57.0
+        version: 1.64.0
 
     - name: Conan cache
       uses: actions/cache@v3

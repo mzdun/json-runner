@@ -53,7 +53,7 @@ jobs:
                                  .*/tools/.*"
 
       - name: Lint with clang-format
-        uses: DoozyX/clang-format-lint-action@v0.16.2
+        uses: DoozyX/clang-format-lint-action@v0.17
         with:
             exclude: ./build ./external ./tools
-            clangFormatVersion: 16
+            clangFormatVersion: 17
