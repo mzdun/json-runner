@@ -44,7 +44,9 @@ namespace testbed {
 			if (it != end) ++it;
 
 			start = it;
-			while (it != end && std::isalnum(static_cast<unsigned char>(*it)))
+			while (
+			    it != end &&
+			    (std::isalnum(static_cast<unsigned char>(*it)) || *it == '_'))
 				++it;
 
 			if (start != it) {

@@ -211,7 +211,7 @@ namespace testbed {
 		select_env from{this, &rt};
 
 		for (auto const& cmd : commands) {
-			auto expanded = rt.expand(cmd, {}, exp::generic);
+			auto expanded = rt.expand(cmd, stored_env, exp::generic);
 			if (!rt.run(*this, expanded.stg, listing)) return false;
 		}
 		return true;
@@ -407,14 +407,14 @@ namespace testbed {
 			if (std::holds_alternative<std::nullptr_t>(value)) {
 				result.erase(key);
 			} else if (std::holds_alternative<std::string>(value)) {
-				result[key] =
-				    rt.expand(std::get<std::string>(value), {}, exp::preferred);
+				result[key] = rt.expand(std::get<std::string>(value),
+				                        stored_env, exp::preferred);
 			} else if (std::holds_alternative<std::vector<std::string>>(
 			               value)) {
 				auto const& vars = std::get<std::vector<std::string>>(value);
 				for (auto const& var : vars) {
 					shell::append(result, key,
-					              rt.expand(var, {}, exp::preferred));
+					              rt.expand(var, stored_env, exp::preferred));
 				}
 			}
 		}

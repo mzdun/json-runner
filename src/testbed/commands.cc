@@ -250,7 +250,7 @@ namespace testbed {
 		auto output = trim(proc.output);
 		stored_env[var] = {output.data(), output.size()};
 		if (current_rt->debug)
-			debug.append(fmt::format("  {} {}\n", var, repr(proc.output)));
+			debug.append(fmt::format("  {} {}\n", var, repr(output)));
 		return true;
 	}
 
