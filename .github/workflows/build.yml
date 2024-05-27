@@ -115,9 +115,7 @@ jobs:
         path: ${{ matrix.home }}/.conan/data
         key: ${{ env.ARTIFACT_SUFFIX }}-${{ hashFiles('conanfile.txt') }}
         restore-keys: |
-          ${{ env.ARTIFACT_SUFFIX }}
           ${{ env.ARTIFACT_SUFFIX }}-${{ matrix.latest_conan_hash }}
-          ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.compiler }}-${{ hashFiles('conanfile.txt') }}
 
     - name: Install OpenCppCoverage
       uses: KungFuDonkey/Install-OpenCppCoverage@v1
