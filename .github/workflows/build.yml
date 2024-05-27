@@ -62,9 +62,15 @@ jobs:
 #     ######## ##    ##    ###    #### ##     ##  #######  ##    ## ##     ## ######## ##    ##    ##
 
     - name: Enable PIP3
-      if: ${{ matrix.ubuntu && !matrix.needs_gcc_ppa }}
+      if: ${{ matrix.ubuntu }}
+      shell: python
       run: |
-        sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
+        import sys,os,platform
+        maj, min, _ = platform.python_version_tuple()
+        try:
+          os.remove(f'{sys.exec_prefix}/lib/python{maj}.{min}/EXTERNALLY-MANAGED')
+        except FileNotFoundError:
+          pass
 
     - name: Install Ninja
       if: ${{ matrix.ubuntu }}
