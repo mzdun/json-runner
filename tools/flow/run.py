@@ -132,6 +132,7 @@ def _known_steps():
 
 
 _default_compiler = {"ubuntu": "gcc", "windows": "msvc"}
+_ubuntu_lts = ["ubuntu-20.04", "ubuntu-22.04", "ubuntu-24.04"]
 
 
 def default_compiler():
@@ -233,11 +234,16 @@ parser.add_argument(
     help="cut matrix to minimal set of builds",
 )
 
-
-def _turn(config: dict):
-    config["github_os"] = "ubuntu-24.04" if config['os'] == "ubuntu" else f"{config['os']}-latest"
+def _turn_one(config: dict, github_os: str, os_in_name: str):
+    config["github_os"] = github_os
+    config["build_name"] = f"{config['build_type']} with {config['compiler']} on {os_in_name}"
+    config["needs_gcc_ppa"] = config["os"] == "ubuntu" and int(github_os.split("-")[1].split(".")[0]) < 24
     return config
 
+def _turn(config: dict, spread_lts: bool):
+    if config["os"] == "ubuntu" and spread_lts:
+        return [_turn_one({key: config[key] for key in config}, lts, lts) for lts in _ubuntu_lts]
+    return [_turn_one(config, f"{config['os']}-latest", config["os"])]
 
 def main():
     args = parser.parse_args()
@@ -274,10 +280,11 @@ def main():
     configs, keys = matrix.load_matrix(*paths)
 
     usable = [
-        _turn(config)
+        _turn(config, args.matrix)
         for config in configs
         if len(args.configs) == 0 or matrix.matches_any(config, args.configs)
     ]
+    usable = [cfg for group in usable for cfg in group]
 
     if args.matrix:
         if "GITHUB_ACTIONS" in os.environ:
