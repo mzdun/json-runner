@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.2.4](https://github.com/mzdun/json-runner/compare/v0.2.3...v0.2.4) (2024-05-27)
+
+### Continuous Integration
+
+- spread ubuntu binaries (#9) ([c19eb47](https://github.com/mzdun/json-runner/commit/c19eb47eac9462d1ae5558fc36e57f9e7019ae71))
+
 ## [0.2.3](https://github.com/mzdun/json-runner/compare/v0.2.2...v0.2.3) (2024-05-27)
 
 ### Bug Fixes

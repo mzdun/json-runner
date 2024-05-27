@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.25)
 project (json-runner
   DESCRIPTION "JSON test orchestration"
-  VERSION 0.2.3
+  VERSION 0.2.4
   LANGUAGES CXX
 )
 
