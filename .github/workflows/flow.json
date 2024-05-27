@@ -2,7 +2,6 @@
   "matrix": {
     "compiler": ["gcc", "msvc"],
     "build_type": ["Release", "Debug"],
-    "sanitizer": [true, false],
     "os": ["ubuntu", "windows"]
   },
   "exclude": [
