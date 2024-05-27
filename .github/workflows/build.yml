@@ -61,6 +61,11 @@ jobs:
 #     ##       ##   ###   ## ##    ##  ##    ##  ##     ## ##   ### ##     ## ##       ##   ###    ##
 #     ######## ##    ##    ###    #### ##     ##  #######  ##    ## ##     ## ######## ##    ##    ##
 
+    - name: Enable PIP3
+      if: ${{ matrix.ubuntu }}
+      run: |
+        sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
+
     - name: Install Ninja
       if: ${{ matrix.ubuntu }}
       run: |
@@ -111,15 +116,9 @@ jobs:
 
     - name: Install Conan
       id: conan
-      run: |
-        pip3 install conan==1.64.0 --upgrade
-        echo "/home/runner/.local/bin" >> $GITHUB_PATH
-        echo "version=$(conan --version)" >> $GITHUB_OUTPUT
-
-    - name: Conan version
-      run: |
-        echo "${{ steps.conan.outputs.version }}"
-        conan --version
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 1.64.0
 
     - name: Conan cache
       uses: actions/cache@v4
