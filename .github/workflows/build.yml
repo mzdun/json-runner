@@ -35,10 +35,10 @@ jobs:
       CONAN_REVISIONS_ENABLED: 1
       FLOW_COMMAND: python ./flow.py run --github --cutdown-os -c os=${{ matrix.os }} build_type=${{ matrix.build_type }} compiler=${{ matrix.compiler }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ARTIFACT_SUFFIX: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.compiler }}
+      ARTIFACT_SUFFIX: ${{ matrix.github_os }}-${{ matrix.build_type }}-${{ matrix.compiler }}
 
     runs-on: ${{ matrix.github_os }}
-    name: ${{ matrix.build_type }} with ${{ matrix.compiler }} on ${{ matrix.os }}
+    name: ${{ matrix.build_name }}
     outputs:
       RELEASE: ${{ fromJson(needs.M.outputs.RELEASE) }}
 
@@ -63,13 +63,19 @@ jobs:
 
     - name: Enable PIP3
       if: ${{ matrix.ubuntu }}
-      run: |
-        sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
+      run: sudo python tools/remove-externally-managed.py
 
     - name: Install Ninja
       if: ${{ matrix.ubuntu }}
       run: |
         sudo apt-get install ninja-build -y
+
+    - name: Install GCC 13
+      if: ${{ matrix.ubuntu && matrix.gcc && matrix.needs_gcc_ppa }}
+      run: |
+        sudo apt install software-properties-common -y
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt install gcc-13 g++-13 -y
 
     - name: Set up GCC 13
       if: ${{ matrix.ubuntu && matrix.gcc }}
@@ -108,9 +114,7 @@ jobs:
         path: ${{ matrix.home }}/.conan/data
         key: ${{ env.ARTIFACT_SUFFIX }}-${{ hashFiles('conanfile.txt') }}
         restore-keys: |
-          ${{ env.ARTIFACT_SUFFIX }}
           ${{ env.ARTIFACT_SUFFIX }}-${{ matrix.latest_conan_hash }}
-          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
 
     - name: Install OpenCppCoverage
       uses: KungFuDonkey/Install-OpenCppCoverage@v1
