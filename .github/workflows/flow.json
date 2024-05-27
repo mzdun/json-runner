@@ -1,12 +1,11 @@
 {
   "matrix": {
-    "compiler": ["gcc", "clang", "msvc"],
+    "compiler": ["gcc", "msvc"],
     "build_type": ["Release", "Debug"],
     "sanitizer": [true, false],
     "os": ["ubuntu", "windows"]
   },
   "exclude": [
-    {"os": "windows", "compiler": "clang"},
     {"os": "windows", "compiler": "gcc"},
     {"os": "ubuntu", "compiler": "msvc"}
   ],
@@ -34,7 +33,6 @@
     },
     {"os": "ubuntu", "report_os": "Linux"},
     {"compiler": "gcc", "report_compiler": "GNU", "gcc": true},
-    {"compiler": "clang", "report_compiler": "Clang", "clang": true},
     {"compiler": "msvc", "report_compiler": "MSVC", "msvc": true},
     {
       "os": "windows",

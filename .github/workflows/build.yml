@@ -88,30 +88,11 @@ jobs:
         sudo update-alternatives --set c++ /usr/bin/g++-13
         sudo update-alternatives --set cc /usr/bin/gcc-13
 
-    - name: Set up Clang 17
-      if: ${{ matrix.ubuntu && matrix.clang }}
-      run: |
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 170
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 170
-
-        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-17 170
-        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-17 170
-
-        sudo update-alternatives --set clang++ /usr/bin/clang++-17
-        sudo update-alternatives --set clang /usr/bin/clang-17
-
-        sudo update-alternatives --set c++ /usr/bin/clang++-17
-        sudo update-alternatives --set cc /usr/bin/clang-17
-
     - name: Check C++ binary
       if: ${{ matrix.ubuntu }}
       run: |
         realpath `which c++`
         c++ --version
-        sudo rm -rf `which g++-11`
-        sudo rm -rf `which gcc-11`
-        sudo rm -rf `which clang++-14`
-        sudo rm -rf `which clang-14`
         sudo locale-gen pl_PL.UTF-8 en_US.UTF-8 en_GB.UTF-8
 
     - name: Install Conan
