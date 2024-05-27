@@ -106,11 +106,11 @@ jobs:
       id: cache
       with:
         path: ${{ matrix.home }}/.conan/data
-        key: ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
+        key: ${{ env.ARTIFACT_SUFFIX }}-${{ hashFiles('conanfile.txt') }}
         restore-keys: |
-          ${{ matrix.github_os }}-${{ matrix.build_type }}
-          ${{ matrix.github_os }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
-          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
+          ${{ env.ARTIFACT_SUFFIX }}
+          ${{ env.ARTIFACT_SUFFIX }}-${{ matrix.latest_conan_hash }}
+          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
 
     - name: Install OpenCppCoverage
       uses: KungFuDonkey/Install-OpenCppCoverage@v1
