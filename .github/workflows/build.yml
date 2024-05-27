@@ -63,14 +63,7 @@ jobs:
 
     - name: Enable PIP3
       if: ${{ matrix.ubuntu }}
-      shell: python
-      run: |
-        import sys,os,platform
-        maj, min, _ = platform.python_version_tuple()
-        try:
-          os.remove(f'{sys.exec_prefix}/lib/python{maj}.{min}/EXTERNALLY-MANAGED')
-        except FileNotFoundError:
-          pass
+      run: sudo python tools/remove-externally-managed.py
 
     - name: Install Ninja
       if: ${{ matrix.ubuntu }}
