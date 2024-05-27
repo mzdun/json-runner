@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.2.3](https://github.com/mzdun/json-runner/compare/v0.2.2...v0.2.3) (2024-05-27)
+
+### Bug Fixes
+
+- use `store` variables more evenly ([46fe353](https://github.com/mzdun/json-runner/commit/46fe353c2dd20283a281a49732cfb779bace1c9a))
+
 ## [0.2.2](https://github.com/mzdun/json-runner/compare/v0.2.1...v0.2.2) (2024-04-15)
 
 ### Bug Fixes
