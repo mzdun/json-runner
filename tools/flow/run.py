@@ -30,6 +30,7 @@ DEF_STEPS = {
 }
 cmd = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
+_ubuntu_lts = ["ubuntu-22.04", "ubuntu-24.04"]
 
 @contextmanager
 def cd(path):
@@ -132,7 +133,6 @@ def _known_steps():
 
 
 _default_compiler = {"ubuntu": "gcc", "windows": "msvc"}
-_ubuntu_lts = ["ubuntu-20.04", "ubuntu-22.04", "ubuntu-24.04"]
 
 
 def default_compiler():
