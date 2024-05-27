@@ -62,7 +62,7 @@ jobs:
 #     ######## ##    ##    ###    #### ##     ##  #######  ##    ## ##     ## ######## ##    ##    ##
 
     - name: Enable PIP3
-      if: ${{ matrix.ubuntu }}
+      if: ${{ matrix.ubuntu && !matrix.needs_gcc_ppa }}
       run: |
         sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
 
