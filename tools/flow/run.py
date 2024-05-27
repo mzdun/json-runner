@@ -237,7 +237,8 @@ parser.add_argument(
 def _turn_one(config: dict, github_os: str, os_in_name: str):
     config["github_os"] = github_os
     config["build_name"] = f"{config['build_type']} with {config['compiler']} on {os_in_name}"
-    config["needs_gcc_ppa"] = config["os"] == "ubuntu" and int(github_os.split("-")[1].split(".")[0]) < 24
+    os_ver = github_os.split("-")[1]
+    config["needs_gcc_ppa"] = os_ver != "latest" and config["os"] == "ubuntu" and int(os_ver.split(".")[0]) < 24
     return config
 
 def _turn(config: dict, spread_lts: bool):
