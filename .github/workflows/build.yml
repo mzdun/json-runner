@@ -76,7 +76,7 @@ jobs:
       run: |
         sudo apt install software-properties-common -y
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        sudo apt install gcc-13 g++-13 gcov-13 -y
+        sudo apt install gcc-13 g++-13 -y
 
     - name: Set up GCC 13
       if: ${{ matrix.ubuntu && matrix.gcc }}
