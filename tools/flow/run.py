@@ -235,7 +235,7 @@ parser.add_argument(
 
 
 def _turn(config: dict):
-    config["github_os"] = f"{config['os']}-latest"
+    config["github_os"] = "ubuntu-24.04" if config['os'] == "ubuntu" else f"{config['os']}-latest"
     return config
 
 

@@ -276,7 +276,9 @@ class API:
 
             data = json.loads(proc.stdout.decode("UTF-8"))
             name = data.get("name")
-            version = name[1:]
+            tag_name = data.get("tag_name")
+            version = name if name != None and name[:1] == 'v' else tag_name
+            version = version[1:]
             assets = {
                 asset.get("name"): (
                     asset.get("id"),

@@ -19,7 +19,7 @@ jobs:
       matrix: ${{steps.flow.outputs.matrix}}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Find builds
       id: flow
@@ -35,6 +35,7 @@ jobs:
       CONAN_REVISIONS_ENABLED: 1
       FLOW_COMMAND: python ./flow.py run --github --cutdown-os -c os=${{ matrix.os }} build_type=${{ matrix.build_type }} compiler=${{ matrix.compiler }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ARTIFACT_SUFFIX: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.compiler }}
 
     runs-on: ${{ matrix.github_os }}
     name: ${{ matrix.build_type }} with ${{ matrix.compiler }} on ${{ matrix.os }}
@@ -43,7 +44,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
          submodules: true
 
@@ -60,20 +61,25 @@ jobs:
 #     ##       ##   ###   ## ##    ##  ##    ##  ##     ## ##   ### ##     ## ##       ##   ###    ##
 #     ######## ##    ##    ###    #### ##     ##  #######  ##    ## ##     ## ######## ##    ##    ##
 
-    - name: Install GCC 12 & Ninja
+    - name: Enable PIP3
+      if: ${{ matrix.ubuntu }}
+      run: |
+        sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
+
+    - name: Install Ninja
       if: ${{ matrix.ubuntu }}
       run: |
         sudo apt-get install ninja-build -y
 
-    - name: Set up GCC
+    - name: Set up GCC 13
       if: ${{ matrix.ubuntu && matrix.gcc }}
       run: |
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 90
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 90
-        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-13 90
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 130
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 130
+        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-13 130
 
-        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-13 90
-        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-13 90
+        sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-13 130
+        sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-13 130
 
         sudo update-alternatives --set g++ /usr/bin/g++-13
         sudo update-alternatives --set gcc /usr/bin/gcc-13
@@ -87,10 +93,6 @@ jobs:
       run: |
         realpath `which c++`
         c++ --version
-        sudo rm -rf `which g++-11`
-        sudo rm -rf `which gcc-11`
-        sudo rm -rf `which clang++-14`
-        sudo rm -rf `which clang-14`
         sudo locale-gen pl_PL.UTF-8 en_US.UTF-8 en_GB.UTF-8
 
     - name: Install Conan
@@ -100,15 +102,15 @@ jobs:
         version: 1.64.0
 
     - name: Conan cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: cache
       with:
         path: ${{ matrix.home }}/.conan/data
-        key: ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
+        key: ${{ env.ARTIFACT_SUFFIX }}-${{ hashFiles('conanfile.txt') }}
         restore-keys: |
-          ${{ matrix.github_os }}-${{ matrix.build_type }}
-          ${{ matrix.github_os }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
-          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.latest_conan_hash }}
+          ${{ env.ARTIFACT_SUFFIX }}
+          ${{ env.ARTIFACT_SUFFIX }}-${{ matrix.latest_conan_hash }}
+          ${{ matrix.github_os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
 
     - name: Install OpenCppCoverage
       uses: KungFuDonkey/Install-OpenCppCoverage@v1
@@ -144,16 +146,32 @@ jobs:
 #      #######  ##        ########  #######  ##     ## ########
 
     - name: Upload packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ steps.artifacts.outputs.CPACK_GENERATORS != '' }}
       with:
-        name: Packages
+        name: _packages-${{ env.ARTIFACT_SUFFIX }}
         path: ${{github.workspace}}/build/artifacts/packages/
+
+  merge:
+    name: Merge artifacts
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      RELEASE: ${{ fromJson(needs.build.outputs.RELEASE) }}
+
+    steps:
+    - name: Merge packages
+      uses: actions/upload-artifact/merge@v4
+      if: ${{ fromJson(needs.build.outputs.RELEASE) }}
+      with:
+        name: Packages
+        pattern: _packages-*
+        delete-merged: true
 
   publish:
     name: Upload packages
-    if: ${{ fromJson(needs.build.outputs.RELEASE) }}
-    needs: build
+    if: ${{ fromJson(needs.merge.outputs.RELEASE) }}
+    needs: merge
     runs-on: ubuntu-latest
 
     env:
@@ -161,10 +179,10 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Get packages
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Packages
         path: ${{github.workspace}}/build/download/packages
