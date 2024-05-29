@@ -56,9 +56,12 @@ namespace testbed {
 				if (key == "TMP"sv) {
 					result.append(get_path(temp_dir, modifier));
 				} else if (key == "INST"sv) {
-					result.append(get_path(rt_target.parent_path(), modifier));
+					result.append(get_path(
+					    rt_target.parent_path().parent_path(), modifier));
 				} else if (key == "VERSION"sv) {
 					result.append(version);
+				} else if (key == "VERSION_SHORT"sv) {
+					result.append(version.substr(0, version.rfind('.')));
 				} else {
 					auto replaced = false;
 					for (auto const& [var, value] : *chai_variables) {
@@ -220,9 +223,9 @@ namespace testbed {
 	void runtime::fix(
 	    std::string& text,
 	    std::vector<std::pair<std::string, std::string>> const& patches) const {
+		auto const inst_dir = rt_target.parent_path().parent_path();
 		text = replace_var(text, shell::get_u8path(temp_dir), "$TMP");
-		text = replace_var(text, shell::get_u8path(rt_target.parent_path()),
-		                   "$INST");
+		text = replace_var(text, shell::get_u8path(inst_dir), "$INST");
 		for (auto const& [var, path] : *chai_variables) {
 			text = replace_var(text, path, "$" + var);
 		}
@@ -230,9 +233,8 @@ namespace testbed {
 		if constexpr (fs::path::preferred_separator !=
 		              static_cast<fs::path::value_type>('/')) {
 			text = replace_var(text, shell::get_generic_path(temp_dir), "$TMP");
-			text = replace_var(text,
-			                   shell::get_generic_path(rt_target.parent_path()),
-			                   "$INST");
+			text =
+			    replace_var(text, shell::get_generic_path(inst_dir), "$INST");
 			for (auto const& [var, path] : *chai_variables) {
 				text = replace_var(
 				    text, shell::get_generic_path(shell::make_u8path(path)),
@@ -240,7 +242,14 @@ namespace testbed {
 			}
 		}
 
-		if (!version.empty()) text = replace_var(text, version, "$VERSION");
+		if (!version.empty()) {
+			text = replace_var(text, version, "$VERSION");
+			auto const pos = version.rfind('.');
+			if (pos != std::string::npos) {
+				text =
+				    replace_var(text, version.substr(0, pos), "$VERSION_SHORT");
+			}
+		}
 		auto lines = split_str(text, '\n');
 
 		std::vector<std::tuple<std::regex, std::string_view, std::string_view>>
