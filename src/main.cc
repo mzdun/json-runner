@@ -497,7 +497,7 @@ int tool(::args::args_view const& args) {
 	for (auto const& [env, var] : info.environment)
 		fmt::print("{}{}\n", mk_label(env, "$"sv), var);
 	fmt::print("{}{}\n", mk_label("$INST"sv),
-	           shell::get_path(rt.rt_target.parent_path()));
+	           shell::get_path(rt.rt_target.parent_path().parent_path()));
 	fmt::print("{}{}\n", mk_label("$TMP"sv), shell::get_path(rt.temp_dir));
 	// fmt::print("{}{}\n", mk_label("JSON horiz"sv),
 	// testbed::test::HORIZ_SPACE);
