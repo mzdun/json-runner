@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [COMMITS.md](COMMITS.md) for commit guidelines.
 
+## [0.3.0](https://github.com/mzdun/json-runner/compare/v0.2.4...v0.3.0) (2024-05-29)
+
+### New Features
+
+- support $VERSION_SHORT, set $INST to prefix ([3e4af16](https://github.com/mzdun/json-runner/commit/3e4af163e97cd799fd1dd94e6d5dde465d9f7acb))
+
 ## [0.2.4](https://github.com/mzdun/json-runner/compare/v0.2.3...v0.2.4) (2024-05-27)
 
 ### Continuous Integration
